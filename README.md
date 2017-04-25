@@ -12,22 +12,16 @@ This project is currently being developed as part of the [DD2476 Search Engines 
 | Lucas Rodés Guirao  		 | [lucasrodes](https://github.com/lucasrodes)       |
 
 
-## Data
+##Data
 
 The tweets from Trump were downloaded from [this repo](https://github.com/bpb27/trump_tweet_data_archive) by [bpb27](https://github.com/bpb27/trump_tweet_data_archive).
 
-## Roadmap
+## Tasks
 
-**1. Retrieve all Trump's tweets**
-* Download 
-Get familiarity with tweepy
-	* Find out interesting fields of twitter posts
-
-* Store tweets in a Database (ElasticSearch)
-	* Structure the data: Parse the retrieved data from tweepy to the database
-
-**2. Visualize Trump's tweets**
-* Try out Kibana
+* JSON - ElasticSearch Interface (Robin)
+* Use ElasticSearch to show data results
+	* Get inspiration from Kibana on what to display 
+* Report using Overleaf
 
 
 ## Resources
