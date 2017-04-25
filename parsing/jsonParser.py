@@ -4,7 +4,7 @@ import os
 data_directory = "../Data"
 tweet_nb = 0
 retweet_nb = 0
-new_data = {}
+new_data = []
 
 for filename in os.listdir(data_directory):
     if filename.endswith(".json"): 
@@ -42,8 +42,8 @@ for filename in os.listdir(data_directory):
 			new_tweet["retweets"] = retweets
 			new_tweet["favorites"] = favorites
 			new_tweet["retweeted"] = retweeted
-			#new_data.append(new_tweet)
-			new_data[tweet.get("id")]=new_tweet
+			new_data.append(new_tweet)
+			#new_data[tweet.get("id")]=new_tweet
 		#print(user_description)
 		#print(user_followers)
 
@@ -60,8 +60,10 @@ for filename in os.listdir(data_directory):
 		#print("\n")
 		tweet_nb+=len(d)
 
+final_data = {}
+final_data["tweets"] = new_data
 with open('../NewData/new_data.json', 'w') as outfile:
-    json.dump(new_data, outfile,indent=4)
+    json.dump(final_data, outfile,indent=4)
 
 print("Tweets: "+str(tweet_nb))
 print("Retweets: "+str(retweet_nb))
