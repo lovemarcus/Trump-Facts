@@ -24,7 +24,7 @@ This project is currently being developed as part of the [DD2476 Search Engines 
 	- Try out Kibana
 
 
-## Resources
+## Resources
 
 - [ElasticSearch/Kibana Installation](https://github.com/lucasrodes/ES-gettingstarted/blob/master/INSTALLATION.md): Works for MacOS
 
