@@ -12,7 +12,7 @@ This project is currently being developed as part of the [DD2476 Search Engines 
 | Lucas Rodés Guirao  		 | [lucasrodes](https://github.com/lucasrodes)       |
 
 
-##Data
+## Data
 
 The tweets from Trump were downloaded from [this repo](https://github.com/bpb27/trump_tweet_data_archive) by [bpb27](https://github.com/bpb27/trump_tweet_data_archive).
 
