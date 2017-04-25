@@ -15,10 +15,10 @@ This project is currently being developed as part of the [DD2476 Search Engines 
 ## Roadmap
 
 **1. Retrieve all Trump's tweets**
-	*Get familiarity with tweepy
+··*Get familiarity with tweepy
 		*Find out interesting fields of twitter posts
 
-	*Store tweets in a Database (ElasticSearch)
+··*Store tweets in a Database (ElasticSearch)
 		*Structure the data: Parse the retrieved data from tweepy to the database
 
 **2. Visualize Trump's tweets**
