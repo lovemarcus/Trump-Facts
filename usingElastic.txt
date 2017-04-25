@@ -1,0 +1,2 @@
+To load jason file use:
+curl -XPOST 'http://localhost:9200/twitter/test/test' -d @new_data.json
