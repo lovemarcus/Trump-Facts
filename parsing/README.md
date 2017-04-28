@@ -1,6 +1,6 @@
 ## Parse the data
 
-Run `jsonParser.py` and wait for it to retrieve the tweets from [@realDonaldTrump](https://twitter.com/realdonaldtrump) and place them in the root folder `data/original_data`. In case you already had downloaded them, it will skip this step. Next, it will parse the tweets to a JSON file, which will be placed in the root directory `data/parsed_data/`. 
+Run `jsonParser.py` and wait for it to retrieve the tweets from [@realDonaldTrump](https://twitter.com/realdonaldtrump) and place them in the root folder [`data/original_data`](../data/original_data). In case you already had downloaded them, it will skip this step. Next, it will parse the tweets to a JSON file, which will be placed in the root directory [`data/parsed_data/`](../data/parsed_data). 
 
 ```
 python3 jsonParser.py
