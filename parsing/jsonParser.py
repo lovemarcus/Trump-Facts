@@ -1,70 +1,119 @@
 import json
 import os
+import requests, zipfile, io
 
-data_directory = "../Data"
-tweet_nb = 0
-retweet_nb = 0
-new_data = []
+def download_files(directory):
+	"""
+	Creates a directory named 'directory' with the json files contianign Trump's tweets if it
+	does not exist
+	"""
+	url = 'https://github.com/bpb27/trump_tweet_data_archive/raw/master/master_'
 
-for filename in os.listdir(data_directory):
-    if filename.endswith(".json"): 
-        print("reading "+ os.path.join(data_directory, filename))
-	with open(os.path.join(data_directory, filename)) as json_data:
-		d = json.load(json_data)
-		for tweet in d:
-			new_tweet = {}
-			
-			if tweet.get("retweeted"):
-				retweet_nb +=1
+	files = ['2009.json', '2010.json', '2011.json', '2012.json', '2013.json', \
+	'2014.json', '2015.json', '2016.json', '2017.json']
 
-			# User info
-			user_description = tweet.get("user").get("description")
-			user_followers = tweet.get("user").get("followers_count")
-			# Tweet info
-			text = tweet.get("text")
-			location = tweet.get("user").get("location")
-			date = tweet.get("created_at")
-			source = tweet.get("source")
-			mentions = []
-			for user_mentionned in tweet.get("entities").get("user_mentions"):
-				mentions.append(user_mentionned.get("screen_name"))
-			retweets = tweet.get("retweet_count")
-			favorites = tweet.get("favorite_count")
-			retweeted = tweet.get("retweeted")
+	break_line = False
 
-			new_tweet["user_description"] = user_description
-			new_tweet["user_followers"] = user_followers
-			new_tweet["text"] = text
-			new_tweet["location"] = location
-			new_tweet["date"] = date
-			new_tweet["source"] = source
-			new_tweet["mentions"] = mentions
-			new_tweet["retweets"] = retweets
-			new_tweet["favorites"] = favorites
-			new_tweet["retweeted"] = retweeted
-			new_data.append(new_tweet)
-			#new_data[tweet.get("id")]=new_tweet
-		#print(user_description)
-		#print(user_followers)
+	print("Downloading data")
+	for file in files:
+		path_to_file = os.path.join(directory, "master_"+file)
+		if not os.path.exists(path_to_file):
+			file_url = url+file+".zip"
+			print("> Downloading", file_url, "...")
+			r = requests.get(file_url)
+			z = zipfile.ZipFile(io.BytesIO(r.content))
+			z.extractall(path=directory)
+			break_line = True
+	if break_line: 
+		print("")
 
-		#print(text)
-		#print(location)
-		#print(date)
-		#print(source)
-		#print(mentions)
-		#print(retweets)
-		#print(favorites)
-		#print(retweeted)
+def extract_relevant_fields_tweet(json_tweet):
+	"""
+	Creates a dictionary using only the relevant fields from json_tweet
+	json_tweet : dictionary containing all the fields from Twitter API 
+	"""
+	# Increase retweet counter
+	"""if tweet.get("retweeted"):
+		retweet_nb +=1"""
+	tweet = {}
+	# Get user information #
+	tweet["user_description"] = json_tweet.get("user").get("description")
+	tweet["user_followers"] = json_tweet.get("user").get("followers_count")
+	tweet["location"] = json_tweet.get("user").get("location")
 
-		#print(len(d))
-		#print("\n")
-		tweet_nb+=len(d)
+	# Tweet text
+	tweet["text"] = json_tweet.get("text")
+	# Date tweet publication
+	tweet["date"] = json_tweet.get("created_at")
+	date_conv = tweet["date"].split(" ")
+	tweet["_timestamp"] = date_conv[5] + u"-" + months_dict[date_conv[1]] +u'-'+ date_conv[2] +u'T' + date_conv[3]
+	# Tweet source
+	tweet["source"] = json_tweet.get("source")
+	# Users mentioned in the tweet (e.g. @MELANIATRUMP)
+	tweet["users_mentioned"] = [user_mentioned.get("screen_name") for user_mentioned in json_tweet.get("entities").get("user_mentions")]
+	# Number of times this Tweet has been retweeted
+	tweet["retweet_count"] = json_tweet.get("retweet_count")
+	# How many times this Tweet has been liked by Twitter users.
+	tweet["favorite_count"] = json_tweet.get("favorite_count")
+	
+	return tweet
 
-final_data = {}
-final_data["tweets"] = new_data
-with open('../NewData/new_data.json', 'w') as outfile:
-    json.dump(final_data, outfile,indent=4)
 
-print("Tweets: "+str(tweet_nb))
-print("Retweets: "+str(retweet_nb))
+if __name__ == "__main__":
 
+	count_tweets = 0 # Counter of the tweets
+	count_retweets = 0 # Counter of the retweets
+	# Directory names
+	directory_data = "../data"
+	directory_original_data = directory_data+"/original_data"
+	directory_parsed_data = directory_data+"/parsed_data"
+	# Create directories if they does not exist
+	if not os.path.exists(directory_data):
+		print("Creating directory", directory_data)
+		os.makedirs(directory_data)
+	if not os.path.exists(directory_original_data):
+		print("Creating directory", directory_original_data)
+		os.makedirs(directory_original_data)
+	if not os.path.exists(directory_parsed_data):
+		print("Creating directory", directory_parsed_data)
+		os.makedirs(directory_parsed_data)
+	print("")
+
+	final_data = {'tweets':[]}
+	download_files(directory_original_data) # Downloads and extracts files if not found in directory_original_data
+
+	months_dict = {'Jan':u'01','Feb':u'02', 'Mar':u'03' ,'Apr':u'04', 'May':u'05',\
+	'Jun':u'06','Jul':u'07', 'Aug':u'08', 'Sep':u'09', 'Oct':u'10', 'Nov':u'11', 'Dec':u'12'}
+
+	print("Reading JSON data")
+	# Look for JSON files within the specified directory
+	for filename in os.listdir(directory_original_data):
+		if not filename.endswith(".json"):
+			continue
+		path_to_file = os.path.join(directory_original_data, filename)
+		print("> Reading", path_to_file)
+
+		# Load JSON file
+		with open(path_to_file) as raw_tweets:
+			raw_tweets = json.load(raw_tweets)
+			# Number of tweets contained in json_tweets
+			count_tweets+=len(raw_tweets)
+
+			# Extract the relevant features from each tweet in json_tweets
+			for raw_tweet in raw_tweets:
+				parsed_tweet = extract_relevant_fields_tweet(raw_tweet)
+				final_data['tweets'].append(parsed_tweet)
+				count_retweets += parsed_tweet['retweet_count']
+
+	print("")
+	print("Storing the data...")
+
+	# Store parsed data
+	with open(directory_parsed_data+'/new_data.json', 'w') as outfile:
+	    json.dump(final_data, outfile,indent=4)
+	    print("> Data succesfully stored!")
+
+	print("")
+	print("Brief summary")
+	print("> Number of tweets: "+str(count_tweets))
+	print("> Number of retweets: "+str(count_retweets))
