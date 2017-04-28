@@ -1,6 +1,6 @@
 # Trump-Facts
 
-User-friendly interface to visualize Trump Tweets.
+User-friendly interface to visualize Trump Tweets using Kibana and ElasticSearch.
 
 This project is currently being developed as part of the [DD2476 Search Engines and Information Retrieval Systems course](https://www.kth.se/student/kurser/kurs/DD2476?l=en) at [KTH Royal Institute of Technology](http://kth.se), spring 2017.
 
@@ -15,6 +15,10 @@ This project is currently being developed as part of the [DD2476 Search Engines 
 ## Data
 
 The tweets from Trump were downloaded from [this repo](https://github.com/bpb27/trump_tweet_data_archive) by [bpb27](https://github.com/bpb27/trump_tweet_data_archive).
+
+### Data format
+
+The tweet data is stored in JSON files, which have been formed accessing the Twitter API. Detailed information of the fields within the JSON files can be found [here](https://dev.twitter.com/overview/api/tweets).
 
 ## Tasks
 
