@@ -17,7 +17,7 @@ pip3 install -r ../requirements.txt
 
 The original data retrieved from the Twitter API has the following structure
 
-```json
+```
 {u'contributors': None, 
 u'truncated': False, 
 u'text': u'Proud of @IvankaTrump for her leadership on these important issues. Looking forward to hearing her speak at the W20! https://t.co/e6Uajrm8zp', 
@@ -35,8 +35,6 @@ u'in_reply_to_user_id': None,
 u'retweet_count': 1302, 
 u'id_str': u'856830933709750272', 
 u'favorited': False, 
-
-
 u'user': {u'follow_request_sent': False, 
 	u'has_extended_profile': False, 
 	u'profile_use_background_image': True, 
