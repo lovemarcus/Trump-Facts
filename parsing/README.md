@@ -13,7 +13,7 @@ pip3 install -r ../requirements.txt
 ```
 
 
-##Format of original data
+## Format of original data
 
 The original data retrieved from the Twitter API has the following structure
 
