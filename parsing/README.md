@@ -1,4 +1,4 @@
-## Parse the data
+## Parse the data
 
 Run `jsonParser.py` and wait for it to retrieve the tweets from [@realDonaldTrump](https://twitter.com/realdonaldtrump) and place them in the root folder `data/original_data`. In case you already had downloaded them, it will skip this step. Next, it will parse the tweets to a JSON file, which will be placed in the root directory `data/parsed_data/`. 
 
@@ -13,11 +13,11 @@ pip3 install -r ../requirements.txt
 ```
 
 
-## Format of original data
+##Format of original data
 
 The original data retrieved from the Twitter API has the following structure
 
-```
+```json
 {u'contributors': None, 
 u'truncated': False, 
 u'text': u'Proud of @IvankaTrump for her leadership on these important issues. Looking forward to hearing her speak at the W20! https://t.co/e6Uajrm8zp', 
@@ -84,4 +84,5 @@ u'user': {u'follow_request_sent': False,
 	u'lang': u'en', 
 	u'created_at': u'Tue Apr 25 11:23:08 +0000 2017', 
 	u'in_reply_to_status_id_str': None, u'place': None}
+}
 ```
