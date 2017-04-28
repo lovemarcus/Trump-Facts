@@ -16,9 +16,13 @@ This project is currently being developed as part of the [DD2476 Search Engines 
 
 The tweets from Trump were downloaded from [this repo](https://github.com/bpb27/trump_tweet_data_archive) by [bpb27](https://github.com/bpb27/trump_tweet_data_archive).
 
-### Data format
+### Data format
 
 The tweet data is stored in JSON files, which have been formed accessing the Twitter API. Detailed information of the fields within the JSON files can be found [here](https://dev.twitter.com/overview/api/tweets).
+
+### Data Parsing
+
+Not all the data provided by the Twitter API is relevant to us. Furthermore, we might want to extend it and add new fields. Thus, we provide a script to process the original data. For more detailed information look into [parsing](parsing) folder 
 
 ## Tasks
 
