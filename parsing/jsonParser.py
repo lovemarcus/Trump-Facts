@@ -1,6 +1,7 @@
 import json
 import os
 import requests, zipfile, io
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 def download_files(directory):
 	"""
@@ -27,7 +28,7 @@ def download_files(directory):
 	if break_line: 
 		print("")
 
-def extract_relevant_fields_tweet(json_tweet):
+def extract_relevant_fields_tweet(json_tweet,analyzer):
 	"""
 	Creates a dictionary using only the relevant fields from json_tweet
 	json_tweet : dictionary containing all the fields from Twitter API 
@@ -55,18 +56,28 @@ def extract_relevant_fields_tweet(json_tweet):
 	tweet["retweet_count"] = json_tweet.get("retweet_count")
 	# How many times this Tweet has been liked by Twitter users.
 	tweet["favorite_count"] = json_tweet.get("favorite_count")
+	tweet["sentiment"] = get_sentiment(analyzer,tweet["text"])
 	
 	return tweet
 
+# Use VADER sentiment analysis
+def get_sentiment(analyzer,text):
+	new_text = text.encode('ascii','ignore')
+	#print(new_text)
+	#print(analyzer.polarity_scores(new_text))
+	return float(analyzer.polarity_scores(new_text).get("compound"))
 
 if __name__ == "__main__":
 
 	count_tweets = 0 # Counter of the tweets
 	count_retweets = 0 # Counter of the retweets
-	# Directory names
+	# Directory names
 	directory_data = "../data"
 	directory_original_data = directory_data+"/original_data"
 	directory_parsed_data = directory_data+"/parsed_data"
+
+	analyzer = SentimentIntensityAnalyzer()
+
 	# Create directories if they does not exist
 	if not os.path.exists(directory_data):
 		print("Creating directory", directory_data)
@@ -86,7 +97,7 @@ if __name__ == "__main__":
 	'Jun':u'06','Jul':u'07', 'Aug':u'08', 'Sep':u'09', 'Oct':u'10', 'Nov':u'11', 'Dec':u'12'}
 
 	print("Reading JSON data")
-	# Look for JSON files within the specified directory
+	# Look for JSON files within the specified directory
 	for filename in os.listdir(directory_original_data):
 		if not filename.endswith(".json"):
 			continue
@@ -101,7 +112,7 @@ if __name__ == "__main__":
 
 			# Extract the relevant features from each tweet in json_tweets
 			for raw_tweet in raw_tweets:
-				parsed_tweet = extract_relevant_fields_tweet(raw_tweet)
+				parsed_tweet = extract_relevant_fields_tweet(raw_tweet,analyzer)
 				final_data['tweets'].append(parsed_tweet)
 				count_retweets += parsed_tweet['retweet_count']
 
