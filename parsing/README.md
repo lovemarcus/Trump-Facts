@@ -12,6 +12,8 @@ In case you are missing required python libraries you can install them by simply
 pip3 install -r ../requirements.txt
 ```
 
+Requires vaderSentiment to analyse tweets. This can be found at [`https://github.com/cjhutto/vaderSentiment`](https://github.com/cjhutto/vaderSentiment)
+
 
 ## Format of original data
 
