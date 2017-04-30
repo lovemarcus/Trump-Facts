@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import os
 import requests, zipfile, io
@@ -27,6 +28,9 @@ def download_files(directory):
 	if break_line: 
 		print("")
 
+def extract_relevant_fields_user(json_tweet):
+	return 0
+
 def extract_relevant_fields_tweet(json_tweet):
 	"""
 	Creates a dictionary using only the relevant fields from json_tweet
@@ -37,24 +41,24 @@ def extract_relevant_fields_tweet(json_tweet):
 		retweet_nb +=1"""
 	tweet = {}
 	# Get user information #
-	tweet["user_description"] = json_tweet.get("user").get("description")
-	tweet["user_followers"] = json_tweet.get("user").get("followers_count")
-	tweet["location"] = json_tweet.get("user").get("location")
+	#tweet["user_description"] = json_tweet.get("user").get("description")
+	#tweet["user_followers"] = json_tweet.get("user").get("followers_count")
+	#tweet["location"] = json_tweet.get("user").get("location")
 
 	# Tweet text
 	tweet["text"] = json_tweet.get("text")
 	# Date tweet publication
-	tweet["date"] = json_tweet.get("created_at")
-	date_conv = tweet["date"].split(" ")
-	tweet["_timestamp"] = date_conv[5] + u"-" + months_dict[date_conv[1]] +u'-'+ date_conv[2] +u'T' + date_conv[3]
+	#tweet["date"] = json_tweet.get("created_at")
+	#date_conv = tweet["date"].split(" ")
+	#tweet["_timestamp"] = date_conv[5] + u"-" + months_dict[date_conv[1]] +u'-'+ date_conv[2] +u'T' + date_conv[3]
 	# Tweet source
-	tweet["source"] = json_tweet.get("source")
+	#tweet["source"] = json_tweet.get("source")
 	# Users mentioned in the tweet (e.g. @MELANIATRUMP)
-	tweet["users_mentioned"] = [user_mentioned.get("screen_name") for user_mentioned in json_tweet.get("entities").get("user_mentions")]
+	#tweet["users_mentioned"] = [user_mentioned.get("screen_name") for user_mentioned in json_tweet.get("entities").get("user_mentions")]
 	# Number of times this Tweet has been retweeted
-	tweet["retweet_count"] = json_tweet.get("retweet_count")
+	#tweet["retweet_count"] = json_tweet.get("retweet_count")
 	# How many times this Tweet has been liked by Twitter users.
-	tweet["favorite_count"] = json_tweet.get("favorite_count")
+	#tweet["favorite_count"] = json_tweet.get("favorite_count")
 	
 	return tweet
 
@@ -79,7 +83,7 @@ if __name__ == "__main__":
 		os.makedirs(directory_parsed_data)
 	print("")
 
-	final_data = {'tweets':[]}
+	final_data = {'tweets':[]}#,'user_description':}
 	download_files(directory_original_data) # Downloads and extracts files if not found in directory_original_data
 
 	months_dict = {'Jan':u'01','Feb':u'02', 'Mar':u'03' ,'Apr':u'04', 'May':u'05',\
@@ -87,6 +91,7 @@ if __name__ == "__main__":
 
 	print("Reading JSON data")
 	# Look for JSON files within the specified directory
+	count = 0
 	for filename in os.listdir(directory_original_data):
 		if not filename.endswith(".json"):
 			continue
@@ -103,7 +108,8 @@ if __name__ == "__main__":
 			for raw_tweet in raw_tweets:
 				parsed_tweet = extract_relevant_fields_tweet(raw_tweet)
 				final_data['tweets'].append(parsed_tweet)
-				count_retweets += parsed_tweet['retweet_count']
+				count += 1
+				#count_retweets += parsed_tweet['retweet_count']
 
 	print("")
 	print("Storing the data...")
