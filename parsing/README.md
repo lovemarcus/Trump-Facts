@@ -53,7 +53,7 @@ If you do not have them, begin by installing [ElasticSearch](https://www.elastic
 > elasticsearch.url: "http://localhost:9200"
 
 
-### Initiate ElasticSearch and Kibana
+### Initiate ElasticSearch and Kibana
 Now, you are reay to start ElasticSearch. To do this, cd to its folder and execute it.
 
 ```
@@ -66,7 +66,7 @@ Check that [http://localhost:9200 ](http://localhost:9200 )is operative. Next, s
 ```
 cd path/to/kibana
 ./bin/kibana
-``
+```
 
 ### Enter Kibana workspace
 
