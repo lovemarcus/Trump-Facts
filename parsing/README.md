@@ -1,4 +1,4 @@
-## Parse the data
+## Parse the data using Python
 
 The goal of the files within this directory is to retrieve the tweets from [@realDonaldTrump](https://twitter.com/realdonaldtrump) and post them into an ElasticSearch system. To this end, we have implemented the file `trumparser.py`, which should ease this process. 
 
@@ -44,6 +44,10 @@ To run all this code, you can use the provided script [`jsonParser.py`](jsonPars
 ```
 python3 jsonParser.py
 ```
+
+### Add new features
+
+If you want to add new fields, feel free to edit the function `extract_relevant_fields_tweet` in [`trumparser.py`](trumparser.py). **Note, however that you also need to update the [mappings.txt](mappings.txt) file!**
 
 ## ElasticSearch and Kibana
 
