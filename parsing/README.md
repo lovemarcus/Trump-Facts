@@ -42,6 +42,33 @@ To run this code, you can use the provided script [`jsonParser.py`](jsonParser.p
 python3 jsonParser.py
 ```
 
+## ElasticSearch and Kibana
+
+### Installation
+
+If you do not have them, begin by installing [ElasticSearch](https://www.elastic.co/products/elasticsearch) and [Kibana](https://www.elastic.co/products/kibana). Place the downloaded folders in the root of this project (could be anywhere actually). In the Kibana folder, you have to edit the `config.yml` file. Simply uncomment the line:
+> elasticsearch.url: "http://localhost:9200"
+
+
+### Initiate ElasticSearch and Kibana
+Now, you are reay to start ElasticSearch. To do this, cd to its folder and execute it.
+
+```
+cd path/to/elasticsearch
+./bin/elasticsearch
+```
+
+Check that [http://localhost:9200 ](http://localhost:9200 )is operative. Next, start Kibana
+
+```
+cd path/to/kibana
+./bin/kibana
+``
+
+### Enter Kibana workspace
+
+Enter [http://localhost:5601](http://localhost:5601) and under 'Index name or pattern' empty field (by default it says 'logstash-*') write the name of our index. If you did not change anything, write **twitter**.
+
 ## Format of original data
 
 The original data retrieved from the Twitter API has the following structure

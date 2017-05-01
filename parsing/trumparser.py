@@ -9,6 +9,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 class TrumParser():
 
 	def __init__(self, index="twitter", url='http://localhost:9200'):
+		self.analyzer = SentimentIntensityAnalyzer()
 		self.index = index
 		self.url = url
 		self.months_dict = {'Jan':u'01','Feb':u'02', 'Mar':u'03' ,'Apr':u'04', 'May':u'05',\
@@ -98,7 +99,7 @@ class TrumParser():
 		# tweet["source"] = json_tweet.get("source")
 		# Users mentioned in the tweet (e.g. @MELANIATRUMP)
 		tweet["users_mentioned"] = [user_mentioned.get("screen_name") for user_mentioned in json_tweet.get("entities").get("user_mentions")]
-		tweet["hashtags"] = [user_mentioned.get("text") for hashtags in json_tweet.get("entities").get("hashtags")]
+		tweet["hashtags"] = [hashtags.get("text") for hashtags in json_tweet.get("entities").get("hashtags")]
 		# Number of times this Tweet has been retweeted
 		tweet["retweet_count"] = json_tweet.get("retweet_count")
 		# How many times this Tweet has been liked by Twitter users.
@@ -106,23 +107,24 @@ class TrumParser():
 		# Followers at the time of the tweet
 		tweet["user_followers"] = json_tweet.get("user").get("followers_count")
 		# Sentiment Analisis
-		tweet["sentiment"] = get_sentiment(analyzer, tweet["text"])
+		tweet["sentiment"] = self.get_sentiment(tweet["text"])
 		
 		return tweet
 
 
 	# Use VADER sentiment analysis
-	def get_sentiment(self, analyzer, text):
+	def get_sentiment(self, text):
 		new_text = text.encode('ascii','ignore')
 		#print(new_text)
 		#print(analyzer.polarity_scores(new_text))
-		return float(analyzer.polarity_scores(new_text).get("compound"))
+		return float(self.analyzer.polarity_scores(text).get("compound"))
 	
 
 	def post_to_elastic(self, directory_original_data):
 		"""
 		posts the content in directory_original_data to elasticsearch
 		"""
+
 		res = requests.get(self.url)
 		es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 
@@ -142,7 +144,7 @@ class TrumParser():
 						# Extract the relevant features from each tweet in json_tweets
 						parsed_tweet = self.extract_relevant_fields_tweet(raw_tweet)
 						# Post to ElasticSearch
-						res2 = es.index(index=self., doc_type='tweet', id=idx, body=parsed_tweet)
+						res2 = es.index(index=self.index, doc_type='tweet', id=idx, body=parsed_tweet)
 						# Increment Index
 						idx += 1
 
