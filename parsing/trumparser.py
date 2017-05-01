@@ -8,7 +8,9 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 class TrumParser():
 
-	def __init__(self):
+	def __init__(self, index="twitter", url='http://localhost:9200'):
+		self.index = index
+		self.url = url
 		self.months_dict = {'Jan':u'01','Feb':u'02', 'Mar':u'03' ,'Apr':u'04', 'May':u'05',\
 	'Jun':u'06','Jul':u'07', 'Aug':u'08', 'Sep':u'09', 'Oct':u'10', 'Nov':u'11', 'Dec':u'12'}
 		self.mapping = '''{  
@@ -23,7 +25,10 @@ class TrumParser():
 						          "type": "text"
 						        },
 						        "users_mentioned":{
-						          "type": "string"
+						          "type": "keyword"
+						        },
+						        "hashtags":{
+						          "type": "keyword"
 						        },
 						        "retweet_count":{
 						          "type": "integer"
@@ -33,7 +38,10 @@ class TrumParser():
 						        },
 						        "user_followers":{
 						          "type": "integer"
-						        } 
+						        },
+						        "sentiment":{
+						          "type":"double"
+						        }
 						      }
 						    }
 						  }
@@ -90,6 +98,7 @@ class TrumParser():
 		# tweet["source"] = json_tweet.get("source")
 		# Users mentioned in the tweet (e.g. @MELANIATRUMP)
 		tweet["users_mentioned"] = [user_mentioned.get("screen_name") for user_mentioned in json_tweet.get("entities").get("user_mentions")]
+		tweet["hashtags"] = [user_mentioned.get("text") for hashtags in json_tweet.get("entities").get("hashtags")]
 		# Number of times this Tweet has been retweeted
 		tweet["retweet_count"] = json_tweet.get("retweet_count")
 		# How many times this Tweet has been liked by Twitter users.
@@ -97,7 +106,7 @@ class TrumParser():
 		# Followers at the time of the tweet
 		tweet["user_followers"] = json_tweet.get("user").get("followers_count")
 		# Sentiment Analisis
-		tweet["sentiment"] = get_sentiment(analyzer,tweet["text"])
+		tweet["sentiment"] = get_sentiment(analyzer, tweet["text"])
 		
 		return tweet
 
@@ -110,16 +119,14 @@ class TrumParser():
 		return float(analyzer.polarity_scores(new_text).get("compound"))
 	
 
-	def postToElastic(self, directory_original_data, index="twitter", url='http://localhost:9200'):
+	def post_to_elastic(self, directory_original_data):
 		"""
 		posts the content in directory_original_data to elasticsearch
 		"""
-		res = requests.get(url)
+		res = requests.get(self.url)
 		es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 
 		while res.status_code == 200:			
-			#es = Elasticsearch()
-			es.indices.create(index=index, ignore=400, body=self.mapping)
 			idx = 0
 			for filename in os.listdir(directory_original_data):
 				if not filename.endswith(".json"):
@@ -135,20 +142,29 @@ class TrumParser():
 						# Extract the relevant features from each tweet in json_tweets
 						parsed_tweet = self.extract_relevant_fields_tweet(raw_tweet)
 						# Post to ElasticSearch
-						res2 = es.index(index="twitter", doc_type='tweet', id=idx, body=parsed_tweet)
+						res2 = es.index(index=self., doc_type='tweet', id=idx, body=parsed_tweet)
 						# Increment Index
 						idx += 1
 
 		if res.status_code != 200:
-			print("Elastic not found at", url)
+			print("Elastic not found at", self.url)
 
 		print("\nTweets succesfully posted!")
 
 
-	def deleteIndex(self, index="twitter", url='http://localhost:9200'):
-		res = requests.get(url)
+	def create_index(self):
+		res = requests.get(self.url)
 		es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 		if res.status_code == 200:
-			es.indices.delete(index=index)
+			es.indices.create(index=self.index, ignore=400, body=self.mapping)
 		elif res.status_code != 200:
-			print("Elastic not found at", url)
+			print("Elastic not found at", self.url)
+
+
+	def delete_index(self):
+		res = requests.get(self.url)
+		es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
+		if res.status_code == 200:
+			es.indices.delete(index=self.index)
+		elif res.status_code != 200:
+			print("Elastic not found at", self.url)

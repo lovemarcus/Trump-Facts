@@ -29,7 +29,7 @@ Use the method `download_files`.
 Trump.download_files('data')
 ```
 
-### Post the data to the Elastic Index
+### Post the data to the Elastic Index
 ```python
 Trump.post_to_elastic('data')
 ```
