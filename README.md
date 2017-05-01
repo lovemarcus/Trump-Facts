@@ -1,15 +1,17 @@
 # Trump-Facts
 
+---
 >	:calendar:
 	Next Meeting: Thursday 4th May, 9:00 AM 
 
-## Current State of the project
+#### Current State of the project
 
 - [X] Tweets parsed and posted to **ElasticSearch**
 - [X] Sentiment Analysis of tweets
 - [ ] Visualization of the tweets using **Kibana**
 - [ ] **Report** using Overleaf
 
+---
 
 User-friendly interface to visualize Trump Tweets using Kibana and ElasticSearch.
 
