@@ -45,7 +45,7 @@ To run all this code, you can use the provided script [`jsonParser.py`](jsonPars
 python3 jsonParser.py
 ```
 
-### Add new features
+### Add new features
 
 If you want to add new fields, feel free to edit the function `extract_relevant_fields_tweet` in [`trumparser.py`](trumparser.py). **Note, however that you also need to update the [mappings.txt](mappings.txt) file!**
 
