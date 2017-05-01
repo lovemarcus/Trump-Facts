@@ -128,7 +128,7 @@ class TrumParser():
 		res = requests.get(self.url)
 		es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 
-		while res.status_code == 200:			
+		if res.status_code == 200:			
 			idx = 0
 			for filename in os.listdir(directory_original_data):
 				if not filename.endswith(".json"):
@@ -148,7 +148,7 @@ class TrumParser():
 						# Increment Index
 						idx += 1
 
-		if res.status_code != 200:
+		elif res.status_code != 200:
 			print("Elastic not found at", self.url)
 
 		print("\nTweets succesfully posted!")

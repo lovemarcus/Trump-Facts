@@ -36,7 +36,10 @@ Use the method `post_to_elastic`.
 Trump.post_to_elastic('data')
 ```
 
-To run this code, you can use the provided script [`jsonParser.py`](jsonParser.py). Simply run
+This step might take up to one minute.
+
+### Run all the code
+To run all this code, you can use the provided script [`jsonParser.py`](jsonParser.py). Simply run
 
 ```
 python3 jsonParser.py
@@ -67,7 +70,7 @@ cd path/to/kibana
 
 ### Enter Kibana workspace
 
-Enter [http://localhost:5601](http://localhost:5601) and under 'Index name or pattern' empty field (by default it says 'logstash-*') write the name of our index. If you did not change anything, write **twitter**.
+Enter [http://localhost:5601](http://localhost:5601) and under 'Index name or pattern' empty field (by default it says 'logstash-*') write the name of our index. If you did not change anything, write **twitter**. Next, select **date** as the date value!
 
 ## Format of original data
 
