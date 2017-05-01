@@ -24,12 +24,12 @@ The tweet data is stored in JSON files, which have been formed accessing the Twi
 
 Not all the data provided by the Twitter API is relevant to us. Furthermore, we might want to extend it and add new fields. Thus, we provide a script to process the original data. For more detailed information look into [parsing](parsing) folder 
 
-## Tasks
+## Current State of the project
 
-* JSON - ElasticSearch Interface (Robin)
-* Use ElasticSearch to show data results
-	* Get inspiration from Kibana on what to display 
-* Report using Overleaf
+[X] Tweets parsed and posted in ElasticSearch 
+[X] Sentiment Analysis of tweets
+[] Visualization of the tweets
+[] Report using Overleaf
 
 
 ## Resources
