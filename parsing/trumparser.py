@@ -14,39 +14,9 @@ class TrumParser():
 		self.url = url
 		self.months_dict = {'Jan':u'01','Feb':u'02', 'Mar':u'03' ,'Apr':u'04', 'May':u'05',\
 	'Jun':u'06','Jul':u'07', 'Aug':u'08', 'Sep':u'09', 'Oct':u'10', 'Nov':u'11', 'Dec':u'12'}
-		self.mapping = '''{  
-						  "mappings":{ 
-						    "trump":{  
-						      "properties":{  
-						        "date":{  
-						          "type":"date",
-						          "format":"yyyy/MM/dd HH:mm:ss"
-						        },
-						        "text":{
-						          "type": "text"
-						        },
-						        "users_mentioned":{
-						          "type": "keyword"
-						        },
-						        "hashtags":{
-						          "type": "keyword"
-						        },
-						        "retweet_count":{
-						          "type": "integer"
-						        },
-						        "favorite_count":{
-						          "type": "integer"
-						        },
-						        "user_followers":{
-						          "type": "integer"
-						        },
-						        "sentiment":{
-						          "type":"double"
-						        }
-						      }
-						    }
-						  }
-						}'''
+		with open('mapping.txt', 'r') as myfile:
+			self.mapping = myfile.read().replace('\n', '')
+
 
 
 	def download_files(self, directory):
