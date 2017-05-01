@@ -50,6 +50,7 @@ elasticsearch-5.2.2
 kibana-5.2.2-darwin-x86_64
 parsing/test.py
 parsing/test
+parsing/data
 
 .DS_Store
 .env
