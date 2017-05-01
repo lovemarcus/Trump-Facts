@@ -1,5 +1,16 @@
 # Trump-Facts
 
+>	:calendar:
+	Next Meeting: Thursday 4th May, 9:00 AM 
+
+## Current State of the project
+
+- [X] Tweets parsed and posted to **ElasticSearch**
+- [X] Sentiment Analysis of tweets
+- [ ] Visualization of the tweets using **Kibana**
+- [ ] **Report** using Overleaf
+
+
 User-friendly interface to visualize Trump Tweets using Kibana and ElasticSearch.
 
 This project is currently being developed as part of the [DD2476 Search Engines and Information Retrieval Systems course](https://www.kth.se/student/kurser/kurs/DD2476?l=en) at [KTH Royal Institute of Technology](http://kth.se), spring 2017.
@@ -23,13 +34,6 @@ The tweet data is stored in JSON files, which have been formed accessing the Twi
 ### Data Parsing
 
 Not all the data provided by the Twitter API is relevant to us. Furthermore, we might want to extend it and add new fields. Thus, we provide a script to process the original data. For more detailed information look into [parsing](parsing) folder 
-
-## Current State of the project
-
-[X] Tweets parsed and posted in ElasticSearch 
-[X] Sentiment Analysis of tweets
-[] Visualization of the tweets
-[] Report using Overleaf
 
 
 ## Resources
