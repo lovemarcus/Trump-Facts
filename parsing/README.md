@@ -1,15 +1,15 @@
 ## Parse the data
 
-The goal of the files within this directory is to retrieve the tweets from[@realDonaldTrump](https://twitter.com/realdonaldtrump) and post them into an ElasticSearch system. To this end, we have implemented the file `trumparser.py`, which should ease this process. 
+The goal of the files within this directory is to retrieve the tweets from [@realDonaldTrump](https://twitter.com/realdonaldtrump) and post them into an ElasticSearch system. To this end, we have implemented the file `trumparser.py`, which should ease this process. 
 
-### Install dependencies
+#### Install dependencies
 
 First of all, make sure that you have all the dependencies correctly installed by running
 ```
 pip3 install -r ../requirements.txt
 ```
 
-### Create an index in Elastic
+#### Create an index in Elastic
 
 You can easily create an index by simply creating a python script and importing the library, creating an object and running the method `create_index()`. 
 
@@ -20,21 +20,23 @@ Trump = TrumParser()
 Trump.createIndex()
 ```
 
-By default, it will create an index with the name *twitter* at the url http:localhost:9200. In case you want to change these parameters specify them as inputs to the constructor `TrumParser()` (see more in [trumparser.py](trumparser.py)).
+By default, it will create an index with the name *twitter* at the url http:localhost:9200. In case you want to change these parameters specify them as inputs to the constructor `TrumParser()` (see more in [`trumparser.py`](trumparser.py)).
 
-### Download tweets
+#### Download tweets
 Use the method `download_files`.
 
 ```python
 Trump.download_files('data')
 ```
 
-### Post the data to the Elastic Index
+#### Post the data to the Elastic Index
+Use the method `post_to_elastic`.
+
 ```python
 Trump.post_to_elastic('data')
 ```
 
-To run this code, you can use the provided script `jsonParser.py`. Simply run
+To run this code, you can use the provided script [`jsonParser.py`](jsonParser.py). Simply run
 
 ```
 python3 jsonParser.py
