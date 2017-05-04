@@ -26,10 +26,11 @@ So far we are preparing the
 		* Plot corresponding histogram.
 - [ ] **Report** using Overleaf, find link [here](https://www.overleaf.com/9353622vmdbczthhksc#/33786110/)
 	* Introduction and abstract sections has been started. Feel free to modify them.
-	
+- [ ] **Poster**
+
 ---
 
-User-friendly interface to visualize Trump Tweets using Kibana and ElasticSearch.
+Visualization of Trump Tweets using Kibana and ElasticSearch.
 
 This project is currently being developed as part of the [DD2476 Search Engines and Information Retrieval Systems course](https://www.kth.se/student/kurser/kurs/DD2476?l=en) at [KTH Royal Institute of Technology](http://kth.se), spring 2017.
 
