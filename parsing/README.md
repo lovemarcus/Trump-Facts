@@ -1,3 +1,30 @@
+This file briefly explains how to post the Trump's tweets into ElasticSearch
+
+## ElasticSearch and Kibana
+
+First of all, you need to have ElasticSearch running before you post anything to it.
+
+### Installation
+
+If you do not have them, begin by installing [ElasticSearch](https://www.elastic.co/products/elasticsearch) and [Kibana](https://www.elastic.co/products/kibana). Place the downloaded folders in the root of this project (could be anywhere actually). In the Kibana folder, you have to edit the `config.yml` file. Simply uncomment the line:
+> elasticsearch.url: "http://localhost:9200"
+
+
+### Initiate ElasticSearch and Kibana
+Now, you are ready to start ElasticSearch. To do this, cd to its folder and execute it.
+
+```
+cd path/to/elasticsearch
+./bin/elasticsearch
+```
+
+Check that [http://localhost:9200 ](http://localhost:9200 )is operative. Next, you can start Kibana
+
+```
+cd path/to/kibana
+./bin/kibana
+```
+
 ## Parse the data using Python
 
 The goal of the files within this directory is to retrieve the tweets from [@realDonaldTrump](https://twitter.com/realdonaldtrump) and post them into an ElasticSearch system. To this end, we have implemented the file `trumparser.py`, which should ease this process. 
@@ -11,7 +38,7 @@ pip3 install -r ../requirements.txt
 
 #### Create an index in Elastic
 
-You can easily create an index by simply creating a python script and importing the library, creating an object and running the method `create_index()`. 
+Now that ElasticSearch is running, you can easily create an index by simply creating a python script and importing the library, creating an object and running the method `create_index()`. 
 
 ```python
 from trumparser import TrumParser
@@ -23,20 +50,20 @@ Trump.createIndex()
 By default, it will create an index with the name *twitter* at the url http:localhost:9200. In case you want to change these parameters specify them as inputs to the constructor `TrumParser()` (see more in [`trumparser.py`](trumparser.py)).
 
 #### Download tweets
-Use the method `download_files`.
+Use the method `download_files` and set a name for the directory you want to place the downloaded files. In our case, we name it `data`.
 
 ```python
 Trump.download_files('data')
 ```
 
 #### Post the data to the Elastic Index
-Use the method `post_to_elastic`.
+Use the method `post_to_elastic`, which posts all the tweets within the files from the previously set directory name.
 
 ```python
 Trump.post_to_elastic('data')
 ```
 
-This step might take up to one minute.
+This step might take one minute (or more).
 
 ### Run all the code
 To run all this code, you can use the provided script [`jsonParser.py`](jsonParser.py). Simply run
@@ -49,32 +76,11 @@ python3 jsonParser.py
 
 If you want to add new fields, feel free to edit the function `extract_relevant_fields_tweet` in [`trumparser.py`](trumparser.py). **Note, however that you also need to update the [mappings.txt](mappings.txt) file!**
 
-## ElasticSearch and Kibana
 
-### Installation
+## Enter Kibana workspace
 
-If you do not have them, begin by installing [ElasticSearch](https://www.elastic.co/products/elasticsearch) and [Kibana](https://www.elastic.co/products/kibana). Place the downloaded folders in the root of this project (could be anywhere actually). In the Kibana folder, you have to edit the `config.yml` file. Simply uncomment the line:
-> elasticsearch.url: "http://localhost:9200"
+Now you are good to go and start trying some of the visualization tools that Kibana provides. To do this, enter [http://localhost:5601](http://localhost:5601) using your web browser and under 'Index name or pattern' box (by default it says 'logstash-*') write the name of our index. If you did not change anything, write **twitter**. Next, select **date** as the date value!
 
-
-### Initiate ElasticSearch and Kibana
-Now, you are reay to start ElasticSearch. To do this, cd to its folder and execute it.
-
-```
-cd path/to/elasticsearch
-./bin/elasticsearch
-```
-
-Check that [http://localhost:9200 ](http://localhost:9200 )is operative. Next, start Kibana
-
-```
-cd path/to/kibana
-./bin/kibana
-```
-
-### Enter Kibana workspace
-
-Enter [http://localhost:5601](http://localhost:5601) and under 'Index name or pattern' empty field (by default it says 'logstash-*') write the name of our index. If you did not change anything, write **twitter**. Next, select **date** as the date value!
 
 ## Format of original data
 
