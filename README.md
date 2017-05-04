@@ -3,7 +3,9 @@
 
 ---
 >	:calendar:
+	
 	- Next Meetingss: (1) Wednesday 10th May, 9:00 AM at the [KTH Bib](https://www.google.se/maps/place/KTH+Biblioteket/@59.34789,18.072871,15z/data=!4m2!3m1!1s0x0:0x80f2dd1472d9a0fa?sa=X&ved=0ahUKEwiIs-nCv83TAhWkHpoKHderCygQ_BIIdjAN)
+	
 	- (2) Friday 12th May, 9:00 AM at the [KTH Bib](https://www.google.se/maps/place/KTH+Biblioteket/@59.34789,18.072871,15z/data=!4m2!3m1!1s0x0:0x80f2dd1472d9a0fa?sa=X&ved=0ahUKEwiIs-nCv83TAhWkHpoKHderCygQ_BIIdjAN)
 
 #### Current State of the project
