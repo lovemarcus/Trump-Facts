@@ -3,13 +3,22 @@
 
 ---
 >	:calendar:
-	Next Meeting: Thursday 4th May, 9:00 AM at the [KTH Bib](https://www.google.se/maps/place/KTH+Biblioteket/@59.34789,18.072871,15z/data=!4m2!3m1!1s0x0:0x80f2dd1472d9a0fa?sa=X&ved=0ahUKEwiIs-nCv83TAhWkHpoKHderCygQ_BIIdjAN)
+	Next Meetingss: (1) Wednesday 10th May, 9:00 AM at the [KTH Bib](https://www.google.se/maps/place/KTH+Biblioteket/@59.34789,18.072871,15z/data=!4m2!3m1!1s0x0:0x80f2dd1472d9a0fa?sa=X&ved=0ahUKEwiIs-nCv83TAhWkHpoKHderCygQ_BIIdjAN)
+	(2) Friday 12th May, 9:00 AM at the [KTH Bib](https://www.google.se/maps/place/KTH+Biblioteket/@59.34789,18.072871,15z/data=!4m2!3m1!1s0x0:0x80f2dd1472d9a0fa?sa=X&ved=0ahUKEwiIs-nCv83TAhWkHpoKHderCygQ_BIIdjAN)
 
 #### Current State of the project
 
 - [X] Tweets parsed and posted to **ElasticSearch**
 - [X] Sentiment Analysis of tweets
+- 
 - [ ] Visualization of the tweets using **Kibana**
+	- [ ] Sentiment Analysis
+		* Filter tweets in two categories: Positive (>0.5) and Negative (<-0.5) and obtain the two corresponding wordclouds.
+		* Graphical representation of the percentile of positive tweets associated to one word.
+	- [ ] Locations/People Heatmap/Wordcloud
+		* Use [NER](https://nlp.stanford.edu/software/CRF-NER.shtml) or a similar tool to extract places/organizations/people mentioned by Trump's tweets
+		* 
+	- [ ] Hourly Tweet Histogram
 - [ ] **Report** using Overleaf
 
 ---
