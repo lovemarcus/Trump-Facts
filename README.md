@@ -10,20 +10,22 @@
 
 #### Current State of the project
 
+So far we are preparing the
 - [X] Tweets parsed and posted to **ElasticSearch**
 - [X] Sentiment Analysis of tweets
-- [ ]
 - [ ] Visualization of the tweets using **Kibana**
-	- [ ] Sentiment Analysis
+	- [ ] **Sentiment Analysis**
 		* Filter tweets in two categories: Positive (>0.5) and Negative (<-0.5) and obtain the two corresponding wordclouds.
-		* Graphical representation of the percentile of positive tweets associated to one word.
-	- [ ] Locations/People Heatmap/Wordcloud
+		* Remove stop words. 
+		* Graphical representation of the percentile of positive tweets retrieved for a given word.
+	- [ ] **Locations/People Heatmap/Wordcloud**
 		* Use [NER](https://nlp.stanford.edu/software/CRF-NER.shtml) or a similar tool to extract places/organizations/people mentioned by Trump's tweets. Plot a corresponding Wordcloud.
 		* Obtain geo-localization of the places/organizations and plot them in a Heatmap.
-	- [ ] Hourly Tweet Histogram
+	- [ ] **Hourly Tweet Histogram**
 		* Find a way to plot just depending on the hour of the day.
 		* Plot corresponding histogram.
 - [ ] **Report** using Overleaf, find link [here](https://www.overleaf.com/9353622vmdbczthhksc#/33786110/)
+	* Introduction and abstract sections has been started. Feel free to modify them.
 	
 ---
 
