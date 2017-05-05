@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-import requests, zipfile, io
+import requests, zipfile, io, time
 from datetime import datetime
 from elasticsearch import Elasticsearch
 import json
@@ -76,7 +76,7 @@ class TrumParser():
 		tweet["favorite_count"] = json_tweet.get("favorite_count")
 		# Followers at the time of the tweet
 		tweet["user_followers"] = json_tweet.get("user").get("followers_count")
-		# Sentiment Analisis
+		# Sentiment Analysis
 		tweet["sentiment"] = self.get_sentiment(tweet["text"])
 		
 		return tweet
@@ -87,7 +87,7 @@ class TrumParser():
 		new_text = text.encode('ascii','ignore')
 		#print(new_text)
 		#print(analyzer.polarity_scores(new_text))
-		return float(self.analyzer.polarity_scores(text).get("compound"))
+		return int(1000*self.analyzer.polarity_scores(text).get("compound"))
 	
 
 	def post_to_elastic(self, directory_original_data):
@@ -105,24 +105,38 @@ class TrumParser():
 					continue
 				path_to_file = os.path.join(directory_original_data, filename)
 				print("> Posting tweets in", path_to_file)
-
+				t0 = time.time()
+				
+				# Test on small portion of the data
+				if(idx>800):
+					break
+				
 				# Load JSON file
 				with open(path_to_file) as raw_tweets:
 					raw_tweets = json.load(raw_tweets)
-					
+					t_parsing = 0
+					t_index = 0
+					print("Number of Tweets:", len(raw_tweets))
 					for raw_tweet in raw_tweets:
 						# Extract the relevant features from each tweet in json_tweets
+						t1 = time.time()
 						parsed_tweet = self.extract_relevant_fields_tweet(raw_tweet)
+						t_parsing += time.time()-t1
+						
 						# Post to ElasticSearch
+						t1 = time.time()
 						res2 = es.index(index=self.index, doc_type='tweet', id=idx, body=parsed_tweet)
+						t_index += time.time()-t1
 						# Increment Index
 						idx += 1
+					#print("Total time: %.2f" % (time.time()-t0))
+					#print("Average Parsing time: \t %.2f ms" % (1000*t_parsing/float(len(raw_tweets))))
+					#print("Average Index time: \t %.2f ms" % (1000*t_index/float(len(raw_tweets))))
 
 		elif res.status_code != 200:
 			print("Elastic not found at", self.url)
 
 		print("\nTweets succesfully posted!")
-
 
 	def create_index(self):
 		res = requests.get(self.url)
