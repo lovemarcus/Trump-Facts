@@ -19,7 +19,7 @@ class TrumParser():
 
 
 
-	def download_files(self, directory):
+	def maybe_download_files(self, directory_downloaded_data, force_update_2017=False):
 		"""
 		Creates a directory named 'directory' with the json files contianign Trump's tweets if it
 		does not exist
@@ -31,18 +31,27 @@ class TrumParser():
 
 		break_line = False
 
-		print("Downloading data")
 		for file in files:
-			path_to_file = os.path.join(directory, "master_"+file)
+			path_to_file = os.path.join(directory_downloaded_data, "master_"+file)
 			if not os.path.exists(path_to_file):
 				file_url = url+file+".zip"
 				print("> Downloading", file_url, "...")
 				r = requests.get(file_url)
 				z = zipfile.ZipFile(io.BytesIO(r.content))
-				z.extractall(path=directory)
+				z.extractall(path=directory_downloaded_data)
 				break_line = True
+		if force_update_2017 == True:
+			file_url = url+files[-1]+".zip"
+			print("> Retrieving last tweets in 2017 from", file_url, "...")
+			r = requests.get(file_url)
+			z = zipfile.ZipFile(io.BytesIO(r.content))
+			z.extractall(path=directory_downloaded_data)
+			break_line = True
+
 		if break_line: 
 			print("")
+		else:
+			print("Nothing to download")
 
 
 	def extract_relevant_fields_tweet(self, json_tweet):
@@ -90,7 +99,7 @@ class TrumParser():
 		return int(1000*self.analyzer.polarity_scores(text).get("compound"))
 	
 
-	def post_to_elastic(self, directory_original_data):
+	def post_to_elastic(self, directory_downloaded_data, n_twitts=5e10):
 		"""
 		posts the content in directory_original_data to elasticsearch
 		"""
@@ -100,33 +109,33 @@ class TrumParser():
 
 		if res.status_code == 200:			
 			idx = 0
-			for filename in os.listdir(directory_original_data):
+			for filename in os.listdir(directory_downloaded_data):
 				if not filename.endswith(".json"):
 					continue
-				path_to_file = os.path.join(directory_original_data, filename)
-				print("> Posting tweets in", path_to_file)
-				t0 = time.time()
+				path_to_file = os.path.join(directory_downloaded_data, filename)
+				print("> Posting", end=" ")
+				#t0 = time.time()
 				
 				# Test on small portion of the data
-				if(idx>800):
+				if(idx>n_twitts):
 					break
 				
 				# Load JSON file
 				with open(path_to_file) as raw_tweets:
 					raw_tweets = json.load(raw_tweets)
-					t_parsing = 0
-					t_index = 0
-					print("Number of Tweets:", len(raw_tweets))
+					# t_parsing = 0
+					# t_index = 0
+					print(len(raw_tweets), "tweets from", path_to_file)#, end="... ")
 					for raw_tweet in raw_tweets:
 						# Extract the relevant features from each tweet in json_tweets
-						t1 = time.time()
+						# t1 = time.time()
 						parsed_tweet = self.extract_relevant_fields_tweet(raw_tweet)
-						t_parsing += time.time()-t1
+						# t_parsing += time.time()-t1
 						
 						# Post to ElasticSearch
-						t1 = time.time()
+						# t1 = time.time()
 						res2 = es.index(index=self.index, doc_type='tweet', id=idx, body=parsed_tweet)
-						t_index += time.time()-t1
+						# t_index += time.time()-t1
 						# Increment Index
 						idx += 1
 					#print("Total time: %.2f" % (time.time()-t0))
@@ -149,8 +158,12 @@ class TrumParser():
 
 	def delete_index(self):
 		res = requests.get(self.url)
-		es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 		if res.status_code == 200:
-			es.indices.delete(index=self.index)
+			try:
+				es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
+				es.indices.delete(index=self.index)
+				print("Index deleted!")
+			except ValueError:
+				print("No index to delete at", self.url)
 		elif res.status_code != 200:
 			print("Elastic not found at", self.url)
