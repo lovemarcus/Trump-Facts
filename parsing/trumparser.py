@@ -5,6 +5,9 @@ from datetime import datetime
 from elasticsearch import Elasticsearch
 import json
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import nltk
+import re
+import time
 
 class TrumParser():
 
@@ -69,6 +72,8 @@ class TrumParser():
 
 		# Tweet text
 		tweet["text"] = json_tweet.get("text")
+		# Get important words
+		tweet["words"] = self.processLanguage(tweet["text"])
 		# Date tweet publication
 		d = json_tweet.get("created_at")
 		date_conv = d.split(" ")
@@ -98,6 +103,28 @@ class TrumParser():
 		#print(analyzer.polarity_scores(new_text))
 		return self.analyzer.polarity_scores(text).get("compound")
 	
+	
+	# Process language and get nouns and adjectives
+	def processLanguage(self,text):
+	    try:
+		tagged = nltk.pos_tag(nltk.word_tokenize(text.replace("@","")))
+		#namedEnt = nltk.ne_chunk(tagged)
+		#print(tagged)
+		#namedEnt.draw()
+		named_entities = []
+		adjectives = []
+		for t in tagged:
+			if (t[1] == 'NN') or (t[1] == 'NNS') or (t[1] == 'NNP') or (t[1] == 'NNPS'):
+				named_entities.append(t[0])
+			if (t[1] == 'JJ') or (t[1] == 'JJS') or (t[1] == 'JJP'):
+				adjectives.append(t[0])
+		named_entities.append(adjectives)		
+		return(named_entities)
+
+	    except Exception, e:
+	        print str(e)
+	        return None
+	       
 
 	def post_to_elastic(self, directory_downloaded_data, n_twitts=5e10):
 		"""
