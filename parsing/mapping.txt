@@ -9,6 +9,9 @@
         "text":{
           "type": "text"
         },
+        "words":{
+          "type": "text"
+        },
         "users_mentioned":{
           "type": "keyword"
         },
