@@ -96,7 +96,7 @@ class TrumParser():
 		new_text = text.encode('ascii','ignore')
 		#print(new_text)
 		#print(analyzer.polarity_scores(new_text))
-		return int(1000*self.analyzer.polarity_scores(text).get("compound"))
+		return self.analyzer.polarity_scores(text).get("compound")
 	
 
 	def post_to_elastic(self, directory_downloaded_data, n_twitts=5e10):
