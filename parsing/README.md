@@ -37,8 +37,11 @@ pip3 install -r ../requirements.txt
 ```
 
 ** New Dependency for NER
-Download: http://nlp.stanford.edu/software/stanford-ner-2015-04-20.zip
-Locations: Place the entire "NER" folder in the parsing folder
+Download: http://nlp.stanford.edu/software/stanford-ner-2015-04-20.zip.
+Locations: Place the entire "NER" folder in the parsing folder.
+
+** New Dependency for geo Conversion
+pip3 install geopy
 
 #### Create an index in Elastic
 
