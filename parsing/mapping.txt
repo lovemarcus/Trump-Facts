@@ -30,8 +30,8 @@
         "sentiment":{
           "type":"double"
         },
-        "sensitive":{
-          "type":"integer"
+        "location": {
+          "type": "geo_point"
         }
       }
     }

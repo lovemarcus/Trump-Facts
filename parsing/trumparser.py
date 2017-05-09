@@ -8,11 +8,16 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import nltk
 import re
 import time
+from nltk.tag import StanfordNERTagger
+from itertools import groupby
+from geopy.geocoders import Nominatim
 
 class TrumParser():
 
 	def __init__(self, index="twitter", url='http://localhost:9200'):
 		self.analyzer = SentimentIntensityAnalyzer()
+		self.st = StanfordNERTagger('english.all.3class.distsim.crf.ser.gz')
+		self.geolocator = Nominatim()
 		self.index = index
 		self.url = url
 		self.months_dict = {'Jan':u'01','Feb':u'02', 'Mar':u'03' ,'Apr':u'04', 'May':u'05',\
@@ -54,7 +59,7 @@ class TrumParser():
 			z.extractall(path=directory_downloaded_data)
 			break_line = True
 
-		if break_line: 
+		if break_line:
 			print("")
 		else:
 			print("Nothing to download")
@@ -63,7 +68,7 @@ class TrumParser():
 	def extract_relevant_fields_tweet(self, json_tweet):
 		"""
 		Creates a dictionary using only the relevant fields from json_tweet
-		json_tweet : dictionary containing all the fields from Twitter API 
+		json_tweet : dictionary containing all the fields from Twitter API
 		"""
 		# Increase retweet counter
 		"""if tweet.get("retweeted"):
@@ -82,6 +87,13 @@ class TrumParser():
 		date_conv = d.split(" ")
 		tweet["date"] = date_conv[5] + u"/" + self.months_dict[date_conv[1]] +u'/'\
 		+ date_conv[2] +u' ' + date_conv[3]
+		# Tweet hour
+		utc_offset = json_tweet.get("user").get("utc_offset")/3600
+		h = str(date_conv[3])
+		new_h = int(h[0:2]) + int(utc_offset)
+		if new_h < 0:
+			new_h = 24 + new_h
+		tweet["hour"] = new_h
 		# Tweet source
 		# tweet["source"] = json_tweet.get("source")
 		# Users mentioned in the tweet (e.g. @MELANIATRUMP)
@@ -95,7 +107,27 @@ class TrumParser():
 		tweet["followers_count"] = json_tweet.get("user").get("followers_count")
 		# Sentiment Analysis
 		tweet["sentiment"] = self.get_sentiment(tweet["text"])
-		# Sensitive content
+
+		# Named-Enity Recognition, Note: very slow segment...
+		netagged_words = self.namedEntityRecognition(tweet["text"])
+		tweet["NER_PERSON"] = []
+		tweet["NER_LOCATION"] = []
+		tweet["NER_ORGANIZATION"] = []
+		tweet["location"] = []
+		for tag, chunk in groupby(netagged_words, lambda x:x[1]):
+			if tag == "PERSON":
+				tweet["NER_PERSON"].append( " ".join(w for w, t in chunk) )
+			elif tag == "LOCATION":
+				loc = " ".join(w for w, t in chunk)
+				tweet["NER_LOCATION"].append( loc )
+				try:
+					geo_elem = self.geolocator.geocode( loc )
+					tweet["location"].append( str( geo_elem.latitude ) + ',' + str( geo_elem.longitude ) )
+				except AttributeError as ae:
+					print("Failed Conversion: " + loc)
+			elif tag == "ORGANIZATION":
+				tweet["NER_ORGANIZATION"].append( " ".join(w for w, t in chunk) )
+
 		return tweet
 		
 
@@ -106,8 +138,12 @@ class TrumParser():
 		#print(new_text)
 		#print(analyzer.polarity_scores(new_text))
 		return self.analyzer.polarity_scores(text).get("compound")
-	
-	
+
+	# Use Stanford named-enity recognition (PERSON, LOCATION, ORGANIZATION)
+	def namedEntityRecognition(self, text):
+		new_text = text.encode('ascii','ignore')
+		return self.st.tag(text.split())
+
 	# Process language and get nouns and adjectives
 	def processLanguage(self,text):
 		try:
@@ -122,7 +158,7 @@ class TrumParser():
 					named_entities.append(t[0])
 				if (t[1] == 'JJ') or (t[1] == 'JJS') or (t[1] == 'JJP'):
 					adjectives.append(t[0])
-			named_entities.append(adjectives)		
+			named_entities.append(adjectives)
 			return named_entities
 		except Exception:
 			return None
@@ -136,7 +172,7 @@ class TrumParser():
 		res = requests.get(self.url)
 		es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 
-		if res.status_code == 200:			
+		if res.status_code == 200:
 			idx = 0
 			for filename in os.listdir(directory_downloaded_data):
 				if not filename.endswith(".json"):
@@ -144,11 +180,11 @@ class TrumParser():
 				path_to_file = os.path.join(directory_downloaded_data, filename)
 				print("> Posting", end=" ")
 				#t0 = time.time()
-				
+
 				# Test on small portion of the data
 				if(idx>n_twitts):
 					break
-				
+
 				# Load JSON file
 				with open(path_to_file) as raw_tweets:
 					raw_tweets = json.load(raw_tweets)
