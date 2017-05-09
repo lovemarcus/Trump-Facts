@@ -10,12 +10,14 @@ import re
 import time
 from nltk.tag import StanfordNERTagger
 from itertools import groupby
+from geopy.geocoders import Nominatim
 
 class TrumParser():
 
 	def __init__(self, index="twitter", url='http://localhost:9200'):
 		self.analyzer = SentimentIntensityAnalyzer()
 		self.st = StanfordNERTagger('english.all.3class.distsim.crf.ser.gz')
+		self.geolocator = Nominatim()
 		self.index = index
 		self.url = url
 		self.months_dict = {'Jan':u'01','Feb':u'02', 'Mar':u'03' ,'Apr':u'04', 'May':u'05',\
@@ -77,7 +79,6 @@ class TrumParser():
 		tweet["text"] = json_tweet.get("text")
 		# Get important words
 		tweet["words"] = self.processLanguage(tweet["text"])
-		print(tweet["words"])
 		# Date tweet publication
 		d = json_tweet.get("created_at")
 		date_conv = d.split(" ")
@@ -101,14 +102,20 @@ class TrumParser():
 		tweet["NER_PERSON"] = []
 		tweet["NER_LOCATION"] = []
 		tweet["NER_ORGANIZATION"] = []
+		tweet["location"] = []
 		for tag, chunk in groupby(netagged_words, lambda x:x[1]):
-		    if tag == "PERSON":
-		        tweet["NER_PERSON"].append( " ".join(w for w, t in chunk) )
-		    elif tag == "LOCATION":
-		        tweet["NER_LOCATION"].append( " ".join(w for w, t in chunk) )
-		    elif tag == "ORGANIZATION":
-		        tweet["NER_ORGANIZATION"].append( " ".join(w for w, t in chunk) )
-
+			if tag == "PERSON":
+				tweet["NER_PERSON"].append( " ".join(w for w, t in chunk) )
+			elif tag == "LOCATION":
+				loc = " ".join(w for w, t in chunk)
+				tweet["NER_LOCATION"].append( loc )
+				try:
+					location = self.geolocator.geocode( loc )
+					tweet["location"].append( str(location.latitude) + ',' + str(location.longitude) )
+				except AttributeError as ae:
+					print("Failed Convertion: " + loc)
+			elif tag == "ORGANIZATION":
+				tweet["NER_ORGANIZATION"].append( " ".join(w for w, t in chunk) )
 		return tweet
 
 
