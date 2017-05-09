@@ -8,11 +8,14 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import nltk
 import re
 import time
+from nltk.tag import StanfordNERTagger
+from itertools import groupby
 
 class TrumParser():
 
 	def __init__(self, index="twitter", url='http://localhost:9200'):
 		self.analyzer = SentimentIntensityAnalyzer()
+		self.st = StanfordNERTagger('english.all.3class.distsim.crf.ser.gz')
 		self.index = index
 		self.url = url
 		self.months_dict = {'Jan':u'01','Feb':u'02', 'Mar':u'03' ,'Apr':u'04', 'May':u'05',\
@@ -51,7 +54,7 @@ class TrumParser():
 			z.extractall(path=directory_downloaded_data)
 			break_line = True
 
-		if break_line: 
+		if break_line:
 			print("")
 		else:
 			print("Nothing to download")
@@ -60,7 +63,7 @@ class TrumParser():
 	def extract_relevant_fields_tweet(self, json_tweet):
 		"""
 		Creates a dictionary using only the relevant fields from json_tweet
-		json_tweet : dictionary containing all the fields from Twitter API 
+		json_tweet : dictionary containing all the fields from Twitter API
 		"""
 		# Increase retweet counter
 		"""if tweet.get("retweeted"):
@@ -93,7 +96,19 @@ class TrumParser():
 		tweet["user_followers"] = json_tweet.get("user").get("followers_count")
 		# Sentiment Analysis
 		tweet["sentiment"] = self.get_sentiment(tweet["text"])
-		
+		# Named-Enity Recognition, Note: very slow segment...
+		netagged_words = self.namedEntityRecognition(tweet["text"])
+		tweet["NER_PERSON"] = []
+		tweet["NER_LOCATION"] = []
+		tweet["NER_ORGANIZATION"] = []
+		for tag, chunk in groupby(netagged_words, lambda x:x[1]):
+		    if tag == "PERSON":
+		        tweet["NER_PERSON"].append( " ".join(w for w, t in chunk) )
+		    elif tag == "LOCATION":
+		        tweet["NER_LOCATION"].append( " ".join(w for w, t in chunk) )
+		    elif tag == "ORGANIZATION":
+		        tweet["NER_ORGANIZATION"].append( " ".join(w for w, t in chunk) )
+
 		return tweet
 
 
@@ -103,8 +118,12 @@ class TrumParser():
 		#print(new_text)
 		#print(analyzer.polarity_scores(new_text))
 		return self.analyzer.polarity_scores(text).get("compound")
-	
-	
+
+	# Use Stanford named-enity recognition (PERSON, LOCATION, ORGANIZATION)
+	def namedEntityRecognition(self, text):
+		new_text = text.encode('ascii','ignore')
+		return self.st.tag(text.split())
+
 	# Process language and get nouns and adjectives
 	def processLanguage(self,text):
 		try:
@@ -119,7 +138,7 @@ class TrumParser():
 					named_entities.append(t[0])
 				if (t[1] == 'JJ') or (t[1] == 'JJS') or (t[1] == 'JJP'):
 					adjectives.append(t[0])
-			named_entities.append(adjectives)		
+			named_entities.append(adjectives)
 			return named_entities
 		except Exception:
 			return None
@@ -133,7 +152,7 @@ class TrumParser():
 		res = requests.get(self.url)
 		es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
 
-		if res.status_code == 200:			
+		if res.status_code == 200:
 			idx = 0
 			for filename in os.listdir(directory_downloaded_data):
 				if not filename.endswith(".json"):
@@ -141,11 +160,11 @@ class TrumParser():
 				path_to_file = os.path.join(directory_downloaded_data, filename)
 				print("> Posting", end=" ")
 				#t0 = time.time()
-				
+
 				# Test on small portion of the data
 				if(idx>n_twitts):
 					break
-				
+
 				# Load JSON file
 				with open(path_to_file) as raw_tweets:
 					raw_tweets = json.load(raw_tweets)
@@ -157,7 +176,7 @@ class TrumParser():
 						# t1 = time.time()
 						parsed_tweet = self.extract_relevant_fields_tweet(raw_tweet)
 						# t_parsing += time.time()-t1
-						
+
 						# Post to ElasticSearch
 						# t1 = time.time()
 						res2 = es.index(index=self.index, doc_type='tweet', id=idx, body=parsed_tweet)
