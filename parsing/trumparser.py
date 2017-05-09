@@ -84,6 +84,13 @@ class TrumParser():
 		date_conv = d.split(" ")
 		tweet["date"] = date_conv[5] + u"/" + self.months_dict[date_conv[1]] +u'/'\
 		+ date_conv[2] +u' ' + date_conv[3]
+		# Tweet hour
+		utc_offset = json_tweet.get("user").get("utc_offset")/3600
+		h = str(date_conv[3])
+		new_h = int(h[0:2]) + int(utc_offset)
+		if new_h < 0:
+			new_h = 24 + new_h
+		tweet["hour"] = new_h
 		# Tweet source
 		# tweet["source"] = json_tweet.get("source")
 		# Users mentioned in the tweet (e.g. @MELANIATRUMP)
@@ -110,10 +117,10 @@ class TrumParser():
 				loc = " ".join(w for w, t in chunk)
 				tweet["NER_LOCATION"].append( loc )
 				try:
-					location = self.geolocator.geocode( loc )
-					tweet["location"].append( str(location.latitude) + ',' + str(location.longitude) )
+					geo_elem = self.geolocator.geocode( loc )
+					tweet["location"].append( str( geo_elem.latitude ) + ',' + str( geo_elem.longitude ) )
 				except AttributeError as ae:
-					print("Failed Convertion: " + loc)
+					print("Failed Conversion: " + loc)
 			elif tag == "ORGANIZATION":
 				tweet["NER_ORGANIZATION"].append( " ".join(w for w, t in chunk) )
 		return tweet
