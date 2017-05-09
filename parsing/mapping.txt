@@ -29,6 +29,9 @@
         },
         "sentiment":{
           "type":"double"
+        },
+        "sensitive":{
+          "type":"integer"
         }
       }
     }

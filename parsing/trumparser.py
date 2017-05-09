@@ -43,6 +43,9 @@ class TrumParser():
 				z = zipfile.ZipFile(io.BytesIO(r.content))
 				z.extractall(path=directory_downloaded_data)
 				break_line = True
+				if file == files[-1]:
+					force_update_2017 = False
+		
 		if force_update_2017 == True:
 			file_url = url+files[-1]+".zip"
 			print("> Retrieving last tweets in 2017 from", file_url, "...")
@@ -74,7 +77,6 @@ class TrumParser():
 		tweet["text"] = json_tweet.get("text")
 		# Get important words
 		tweet["words"] = self.processLanguage(tweet["text"])
-		print(tweet["words"])
 		# Date tweet publication
 		d = json_tweet.get("created_at")
 		date_conv = d.split(" ")
@@ -90,11 +92,12 @@ class TrumParser():
 		# How many times this Tweet has been liked by Twitter users.
 		tweet["favorite_count"] = json_tweet.get("favorite_count")
 		# Followers at the time of the tweet
-		tweet["user_followers"] = json_tweet.get("user").get("followers_count")
+		tweet["followers_count"] = json_tweet.get("user").get("followers_count")
 		# Sentiment Analysis
 		tweet["sentiment"] = self.get_sentiment(tweet["text"])
-		
+		# Sensitive content
 		return tweet
+		
 
 
 	# Use VADER sentiment analysis
@@ -157,7 +160,7 @@ class TrumParser():
 						# t1 = time.time()
 						parsed_tweet = self.extract_relevant_fields_tweet(raw_tweet)
 						# t_parsing += time.time()-t1
-						
+
 						# Post to ElasticSearch
 						# t1 = time.time()
 						res2 = es.index(index=self.index, doc_type='tweet', id=idx, body=parsed_tweet)
