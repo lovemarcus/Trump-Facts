@@ -29,6 +29,9 @@
         },
         "sentiment":{
           "type":"double"
+        },
+        "location": {
+          "type": "geo_point"
         }
       }
     }
