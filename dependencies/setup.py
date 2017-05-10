@@ -5,9 +5,9 @@ import nltk
 
 # 1. Download NER
 if not os.path.exists('NER'):
-    print("NER files already downloaded (at least there is a folder called NER!)")
+    print("> NER files already downloaded (at least there is a folder called NER!)\n")
 else:
-    print("> Downloading NER dependencies")
+    print("> Downloading NER dependencies...\n")
     zipurl = "http://nlp.stanford.edu/software/stanford-ner-2015-04-20.zip"
     zipresp = urlopen(zipurl)
     tempzip = open("/tmp/tempfile.zip", "wb")
@@ -19,6 +19,7 @@ else:
     zf.close()
 
 # 2. Download NLTK stuff
+print("> Downloading NER dependencies...\n")
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
 nltk.download('punkt')
