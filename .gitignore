@@ -55,6 +55,8 @@ NER
 __pycache__
 kibana-5.4.0-linux-x86_64
 elasticsearch-5.4.0
+kibana-5.4.0-darwin-x86_64/
 
 .DS_Store
 .env
+.tenv
