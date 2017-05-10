@@ -29,28 +29,9 @@ cd path/to/kibana
 
 The goal of the files within this directory is to retrieve the tweets from [@realDonaldTrump](https://twitter.com/realdonaldtrump) and post them into an ElasticSearch system. To this end, we have implemented the file `trumparser.py`, which should ease this process.
 
-#### Install dependencies
+### Install dependencies
 
-First of all, make sure that you have all the dependencies correctly installed by running
-```
-pip3 install -r ../requirements.txt
-```
-
-** New Dependency for NER
-Download: http://nlp.stanford.edu/software/stanford-ner-2015-04-20.zip.
-Locations: Place the entire "NER" folder in the parsing folder.
-
-** New Dependency for geo Conversion
-pip3 install geopy
-
-** New Dependency for nltk NER
-run the following python script once to download the classifier
-```python
-import nltk
-
-nltk.download('maxent_ne_chunker')
-nltk.download('words')
-```
+First of all, run the bash script in the root folder `install_dependencies.sh` to make sure that you have all the dependencies correctly installed! 
 
 #### Create an index in Elastic
 
