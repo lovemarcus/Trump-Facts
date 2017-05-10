@@ -80,8 +80,10 @@ class TrumParser():
 
 		# Tweet text
 		tweet["text"] = json_tweet.get("text")
-		# Get important words
-		tweet["words"] = self.processLanguage(tweet["text"])
+		# Get important words and ner using nltk
+		ne = self.processLanguage(tweet["text"])
+		for key,value in ne.items():
+			tweet[key] = value
 		# Date tweet publication
 		d = json_tweet.get("created_at")
 		date_conv = d.split(" ")
@@ -145,23 +147,48 @@ class TrumParser():
 		return self.st.tag(text.split())
 
 	# Process language and get nouns and adjectives
+	# Process language and get nouns and adjectives
 	def processLanguage(self,text):
-		try:
+	    try:
 			tagged = nltk.pos_tag(nltk.word_tokenize(text.replace("@","")))
 			#namedEnt = nltk.ne_chunk(tagged)
 			#print(tagged)
-			#namedEnt.draw()
-			named_entities = []
+			ne_tagged = nltk.ne_chunk(tagged)
+			words = []
 			adjectives = []
 			for t in tagged:
 				if (t[1] == 'NN') or (t[1] == 'NNS') or (t[1] == 'NNP') or (t[1] == 'NNPS'):
-					named_entities.append(t[0])
+					words.append(t[0])
 				if (t[1] == 'JJ') or (t[1] == 'JJS') or (t[1] == 'JJP'):
 					adjectives.append(t[0])
-			named_entities.append(adjectives)
-			return named_entities
-		except Exception:
-			return None
+			words.append(adjectives)		
+			
+			named_entities ={'words':words,'persons':[],'organizations':[],'locations':[], 'other':[]}
+			
+			for entity in ne_tagged:
+				if isinstance(entity, nltk.tree.Tree):
+					etext = " ".join([word for word, tag in entity.leaves()])
+					label = entity.label()
+					#print(etext,label)
+				else:
+				    continue
+				
+				if label == 'PERSON':
+				    key = 'NLTK_PERSON'
+				elif label == 'ORGANIZATION':
+				    key = 'NLTK_ORGANIZATION'
+				elif label == 'LOCATION':
+				    key = 'NLTK_LOCATION'
+				else:
+					key = None
+					
+				if key:
+					named_entities[key].append(etext)
+			return(named_entities)
+
+	    except Exception, e:
+	        print str(e)
+	        return None
 
 
 	def post_to_elastic(self, directory_downloaded_data, n_twitts=5e10):
