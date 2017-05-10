@@ -31,9 +31,9 @@ The goal of the files within this directory is to retrieve the tweets from [@rea
 
 ### Install dependencies
 
-First of all, run the bash script in the root folder `install_dependencies.sh` to make sure that you have all the dependencies correctly installed! 
+First of all, run the bash script in the root folder `install_dependencies.sh` to make sure that you have all the dependencies correctly installed!
 
-#### Create an index in Elastic
+### Create an index in Elastic
 
 Now that ElasticSearch is running, you can easily create an index by simply creating a python script and importing the library, creating an object and running the method `create_index()`.
 
@@ -46,14 +46,14 @@ Trump.createIndex()
 
 By default, it will create an index with the name *twitter* at the url http:localhost:9200. In case you want to change these parameters specify them as inputs to the constructor `TrumParser()` (see more in [`trumparser.py`](trumparser.py)).
 
-#### Download tweets
+### Download tweets
 Use the method `download_files` and set a name for the directory you want to place the downloaded files. In our case, we name it `data`.
 
 ```python
 Trump.download_files('data')
 ```
 
-#### Post the data to the Elastic Index
+### Post the data to the Elastic Index
 Use the method `post_to_elastic`, which posts all the tweets within the files from the previously set directory name.
 
 ```python
