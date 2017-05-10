@@ -43,6 +43,15 @@ Locations: Place the entire "NER" folder in the parsing folder.
 ** New Dependency for geo Conversion
 pip3 install geopy
 
+** New Dependency for nltk NER
+run the following python script once to download the classifier
+```python
+import nltk
+
+nltk.download('maxent_ne_chunker')
+nltk.download('words')
+```
+
 #### Create an index in Elastic
 
 Now that ElasticSearch is running, you can easily create an index by simply creating a python script and importing the library, creating an object and running the method `create_index()`.

@@ -12,6 +12,24 @@
         "words":{
           "type": "text"
         },
+	"NLTK_PERSON":{
+          "type": "keyword"
+        },
+	"NLTK_LOCATION":{
+          "type": "keyword"
+        },
+	"NLTK_ORGANIZATION":{
+          "type": "keyword"
+        },
+	"NER_PERSON":{
+          "type": "keyword"
+        },
+	"NER_LOCATION":{
+          "type": "keyword"
+        },
+	"locations":{
+          "type": "keyword"
+        },
         "users_mentioned":{
           "type": "keyword"
         },
