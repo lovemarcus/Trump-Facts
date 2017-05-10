@@ -7,14 +7,17 @@ import io
 import nltk
 import requests
 import zipfile
+import ast
+import time
 from elasticsearch import Elasticsearch
 from geopy.geocoders import Nominatim
 from nltk.tag import StanfordNERTagger
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from itertools import groupby
 
 
 class TrumParser:
-    def __init__(self, index: str = "twitter", url: str ='http://localhost:9200'):
+    def __init__(self, index = "twitter", url ='http://localhost:9200'):
         self.analyzer = SentimentIntensityAnalyzer()
         #self.st = StanfordNERTagger('english.all.3class.distsim.crf.ser.gz')
         self.geolocator = Nominatim()
@@ -27,8 +30,9 @@ class TrumParser:
                             }
         with open('mapping.txt', 'r') as myfile:
             self.mapping = myfile.read().replace('\n', '')
-
-    def extract_relevant_fields_tweet(self, json_tweet: dict) -> dict:
+        with open('locDict.txt', 'r') as myfile:
+            self.locDict = json.load(myfile)
+    def extract_relevant_fields_tweet(self, json_tweet):
         """
         Extracts relevant information out from a given tweet
         :param json_tweet: Tweet in JSON format
@@ -80,7 +84,7 @@ class TrumParser:
 
         return tweet
 
-    def get_date_and_hour(self, json_tweet: dict) -> tuple((str, int)):
+    def get_date_and_hour(self, json_tweet):
         """
         Obtains the time and hour a certain tweet was published
         :param json_tweet: Tweet in JSON format
@@ -96,7 +100,7 @@ class TrumParser:
             hour += 24
         return date, hour
 
-    def get_sentiment(self, text: str) -> float:
+    def get_sentiment(self, text):
         """
         Get sentiment value from the given text using VADER sentiment analysis tools
         :param text: Tweet text as a string
@@ -104,7 +108,7 @@ class TrumParser:
         """
         return self.analyzer.polarity_scores(text).get("compound")
 
-    def named_entity_recognition(self, text: str):
+    def named_entity_recognition(self, text):
         """
         Obtain persons, locations and organizations mentioned in the given tweet using Named-Entity Recognition (NER)
         tool by Stanford
@@ -113,7 +117,7 @@ class TrumParser:
         """
         return self.st.tag(text.split())
 
-    def post_to_elastic(self, directory_downloaded_data, n_twitts=5e10) -> None:
+    def post_to_elastic(self, directory_downloaded_data, n_twitts=5e10):
         """
         posts the content in directory_original_data to ElasticSearch
         """
@@ -127,7 +131,7 @@ class TrumParser:
                 if not filename.endswith(".json"):
                     continue
                 path_to_file = os.path.join(directory_downloaded_data, filename)
-                print("> Posting", end=" ")
+                print("> Posting")
                 # t0 = time.time()
 
                 # Test on small portion of the data
@@ -161,7 +165,7 @@ class TrumParser:
 
         print("\nTweets successfully posted!")
 
-    def create_index(self) -> None:
+    def create_index(self):
         """
         Creates the defined index in ElasticSearch
         """
@@ -172,7 +176,7 @@ class TrumParser:
         elif res.status_code != 200:
             print("Elastic not found at", self.url)
 
-    def delete_index(self) -> None:
+    def delete_index(self):
         """
         Deletes the created index from ElasticSearch
         """
@@ -188,7 +192,7 @@ class TrumParser:
             print("Elastic not found at", self.url)
 
 
-def maybe_download_files(directory_downloaded_data: str, force_update_2017=False) -> None:
+def maybe_download_files(directory_downloaded_data, force_update_2017=False):
     """
     Potentially downloads the missing files using The Trump Archive by github@bpb27
     :param directory_downloaded_data: Path to store the downloaded files
@@ -225,9 +229,8 @@ def maybe_download_files(directory_downloaded_data: str, force_update_2017=False
         print("")
     else:
         print("Nothing to download")
-
-
-def get_users_mentioned(json_tweet) -> list:
+    
+def get_users_mentioned(json_tweet):
     """
     Returns users mentioned in the given tweet
     :param json_tweet:
@@ -236,7 +239,7 @@ def get_users_mentioned(json_tweet) -> list:
     return [user_mentioned.get("screen_name") for user_mentioned in json_tweet.get("entities").get("user_mentions")]
 
 
-def get_hashtags_mentioned(json_tweet) -> list:
+def get_hashtags_mentioned(json_tweet):
     """
     Returns hashtags mentioned in the given tweet
     :param json_tweet:
@@ -245,7 +248,7 @@ def get_hashtags_mentioned(json_tweet) -> list:
     return [hashtags.get("text") for hashtags in json_tweet.get("entities").get("hashtags")]
 
 
-def process_language(text: str) -> dict:
+def process_language(text):
     """
     Processes the input text and obtains mentioned persons, organizations and locations
     :param text: Tweet text as a string
@@ -289,3 +292,52 @@ def process_language(text: str) -> dict:
     except NameError as e:
         print(str(e))
     return None
+
+def update_location_dictionary(file_path):
+    print("> Updating locations mentioned and geo coordinates ...")
+    locations = parse_locations(file_path)
+    with open('locDict.txt', 'w') as outfile:
+        json.dump(locations, outfile)
+    f = get_fail_percentage('locDict.txt')
+    print("> Finished updating locations, %.2f success rate" % f)
+
+# parse locations from file and get corresponding gps coordinates if available
+def parse_locations(file_path):
+    locations = {}
+    with open(file_path, 'r') as myfile:
+        data=myfile.readlines()
+        for tweet in data:
+            for tag, chunk in groupby(ast.literal_eval(tweet), lambda x:x[1]):
+                if tag=="LOCATION":
+                    word = " ".join(w for w, t in chunk)
+                    if (locations.get(word)==None):
+                        locations[word] = get_gps_coordinates(word)
+    return locations
+
+# Get corresponding gps coordinates to string loc
+def get_gps_coordinates(loc):
+    try:
+        geo_elem = geocode(loc)
+        return ( str( geo_elem.latitude ) + ',' + str( geo_elem.longitude ) )
+    except AttributeError as ae:
+        print("Failed Conversion: " + loc)
+        return None
+
+def geocode(city, recursion=0):
+    try:
+        return Nominatim().geocode(city)
+    except AttributeError as e:
+        if recursion > 10:      # max recursions
+            raise e
+        time.sleep(1) # wait a bit
+        # try again
+        return geocode(city, recursion=recursion + 1)
+
+def get_fail_percentage(file_path):
+    fails = 0
+    with open(file_path) as outfile:
+        locations = json.load(outfile)
+    for key,value in locations.items():
+        if value == None:
+            fails += 1
+    return(1-float(fails)/len(locations))
