@@ -51,6 +51,10 @@ kibana-5.2.2-darwin-x86_64
 parsing/test.py
 parsing/test
 parsing/data
+NER
+__pycache__
+kibana-5.4.0-linux-x86_64
+elasticsearch-5.4.0
 
 .DS_Store
 .env
