@@ -14,7 +14,7 @@ So far we are preparing the
 - [X] Tweets parsed and posted to **ElasticSearch**
 - [X] Sentiment Analysis of tweets
 - [ ] Visualization of the tweets using **Kibana**
-	- [ ] **Sentiment Analysis**
+	- [ ] **Sentiment Analysis**
 		* Filter tweets in two categories: Positive (>0.5) and Negative (<-0.5) and obtain the two corresponding wordclouds.
 		* Remove stop words. 
 		* Graphical representation of the percentile of positive tweets retrieved for a given word.
