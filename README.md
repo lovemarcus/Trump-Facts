@@ -58,7 +58,7 @@ Not all the data provided by the Twitter API is relevant to us. Furthermore, we 
 Simply run the bash script
 
 ```
-./install_dependencies
+bash install_dependencies
 ```
 
 
