@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-from itertools import groupby
+#from itertools import groupby
 
 import io
 import nltk
@@ -16,7 +16,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 class TrumParser:
     def __init__(self, index: str = "twitter", url: str ='http://localhost:9200'):
         self.analyzer = SentimentIntensityAnalyzer()
-        self.st = StanfordNERTagger('english.all.3class.distsim.crf.ser.gz')
+        #self.st = StanfordNERTagger('english.all.3class.distsim.crf.ser.gz')
         self.geolocator = Nominatim()
         self.index = index
         self.url = url
@@ -28,7 +28,7 @@ class TrumParser:
         with open('mapping.txt', 'r') as myfile:
             self.mapping = myfile.read().replace('\n', '')
 
-    def extract_relevant_fields_tweet(self, json_tweet):
+    def extract_relevant_fields_tweet(self, json_tweet: dict) -> dict:
         """
         Extracts relevant information out from a given tweet
         :param json_tweet: Tweet in JSON format
@@ -38,29 +38,32 @@ class TrumParser:
 
         # Tweet text
         tweet["text"] = json_tweet.get("text")
-        # Get important words
-        # Get important words and ner using nltk
-        ne = self.processLanguage(tweet["text"])
+
+        # Get persons, locations and organizations using NLTK
+        ne = process_language(tweet["text"])
         for key, value in ne.items():
             tweet[key] = value
+
         # Get date and hour
         tweet["date"], tweet["hour"] = self.get_date_and_hour(json_tweet)
-        #  tweet["source"] = json_tweet.get("source")
-        # Users mentioned in the tweet (e.g. @MELANIATRUMP)
+
+        # Users and hashtags mentioned in the tweet (e.g. @MELANIATRUMP)
         tweet["users_mentioned"] = get_users_mentioned(json_tweet)
-        tweet["hashtags"] = get_hashtags_mentioned(json_tweet)
-        # Number of times this Tweet has been retweeted
+        tweet["hashtags_mentioned"] = get_hashtags_mentioned(json_tweet)
+
+        # Number of times this Tweet has been retweeted and favourited
         tweet["retweet_count"] = json_tweet.get("retweet_count")
-        # How many times this Tweet has been liked by Twitter users.
         tweet["favorite_count"] = json_tweet.get("favorite_count")
-        # Sentiment Analysis
+
+        # Get sentiment impact from the tweet
         tweet["sentiment"] = self.get_sentiment(tweet["text"])
-        # Named-Enity Recognition, Note: very slow segment...
-        netagged_words = self.namedEntityRecognition(tweet["text"])
+
+        """"# Get persons, locations and organizations using NER by Stanford, Note: very slow segment...
+        netagged_words = self.named_entity_recognition(tweet["text"])
         tweet["NER_PERSON"] = []
         tweet["NER_LOCATION"] = []
         tweet["NER_ORGANIZATION"] = []
-        tweet["location"] = []
+        tweet["geo_location"] = []
         for tag, chunk in groupby(netagged_words, lambda x: x[1]):
             if tag == "PERSON":
                 tweet["NER_PERSON"].append(" ".join(w for w, t in chunk))
@@ -69,15 +72,15 @@ class TrumParser:
                 tweet["NER_LOCATION"].append(loc)
                 try:
                     geo_elem = self.geolocator.geocode(loc)
-                    tweet["location"].append(str(geo_elem.latitude) + ',' + str(geo_elem.longitude))
-                except AttributeError as ae:
+                    tweet["geo_location"].append(str(geo_elem.latitude) + ',' + str(geo_elem.longitude))
+                except AttributeError:
                     print("Failed Conversion: " + loc)
             elif tag == "ORGANIZATION":
-                tweet["NER_ORGANIZATION"].append(" ".join(w for w, t in chunk))
+                tweet["NER_ORGANIZATION"].append(" ".join(w for w, t in chunk))"""
 
         return tweet
 
-    def get_date_and_hour(self, json_tweet):
+    def get_date_and_hour(self, json_tweet: dict) -> tuple((str, int)):
         """
         Obtains the time and hour a certain tweet was published
         :param json_tweet: Tweet in JSON format
@@ -96,65 +99,23 @@ class TrumParser:
     def get_sentiment(self, text: str) -> float:
         """
         Get sentiment value from the given text using VADER sentiment analysis tools
-        :param text:
-        :return:
+        :param text: Tweet text as a string
+        :return: Float containing the sentiment of the input tweet string
         """
-        new_text = text.encode('ascii', 'ignore')
-        # print(new_text)
-        # print(analyzer.polarity_scores(new_text))
         return self.analyzer.polarity_scores(text).get("compound")
 
-    # Use Stanford named-enity recognition (PERSON, LOCATION, ORGANIZATION)
-    def namedEntityRecognition(self, text):
-        new_text = text.encode('ascii', 'ignore')
+    def named_entity_recognition(self, text: str):
+        """
+        Obtain persons, locations and organizations mentioned in the given tweet using Named-Entity Recognition (NER)
+        tool by Stanford
+        :param text: Tweet text as a string
+        :return: List containing
+        """
         return self.st.tag(text.split())
 
-    # Process language and get nouns and adjectives
-    def processLanguage(self, text):
-        try:
-            tagged = nltk.pos_tag(nltk.word_tokenize(text.replace("@", "")))
-            # namedEnt = nltk.ne_chunk(tagged)
-            # print(tagged)
-            ne_tagged = nltk.ne_chunk(tagged)
-        words = []
-        adjectives = []
-        for t in tagged:
-            if (t[1] == 'NN') or (t[1] == 'NNS') or (t[1] == 'NNP') or (t[1] == 'NNPS'):
-                words.append(t[0])
-            if (t[1] == 'JJ') or (t[1] == 'JJS') or (t[1] == 'JJP'):
-                adjectives.append(t[0])
-        words.append(adjectives)
-
-        named_entities = {'words': words, 'persons': [], 'organizations': [], 'locations': [], 'other': []}
-
-        for entity in ne_tagged:
-            if isinstance(entity, nltk.tree.Tree):
-                etext = " ".join([word for word, tag in entity.leaves()])
-                label = entity.label()
-                # print(etext,label)
-            else:
-                continue
-
-            if label == 'PERSON':
-                key = 'NLTK_PERSON'
-            elif label == 'ORGANIZATION':
-                key = 'NLTK_ORGANIZATION'
-            elif label == 'LOCATION':
-                key = 'NLTK_LOCATION'
-            else:
-                key = None
-
-            if key:
-                named_entities[key].append(etext)
-        return (named_entities)
-
-        except Exception e:
-            print(str(e))
-        return None
-
-    def post_to_elastic(self, directory_downloaded_data, n_twitts=5e10):
+    def post_to_elastic(self, directory_downloaded_data, n_twitts=5e10) -> None:
         """
-        posts the content in directory_original_data to elasticsearch
+        posts the content in directory_original_data to ElasticSearch
         """
 
         res = requests.get(self.url)
@@ -170,7 +131,7 @@ class TrumParser:
                 # t0 = time.time()
 
                 # Test on small portion of the data
-                if (idx > n_twitts):
+                if idx > n_twitts:
                     break
 
                 # Load JSON file
@@ -187,7 +148,7 @@ class TrumParser:
 
                         # Post to ElasticSearch
                         # t1 = time.time()
-                        res2 = es.index(index=self.index, doc_type='tweet', id=idx, body=parsed_tweet)
+                        es.index(index=self.index, doc_type='tweet', id=idx, body=parsed_tweet)
                         # t_index += time.time()-t1
                         #  Increment Index
                         idx += 1
@@ -200,7 +161,7 @@ class TrumParser:
 
         print("\nTweets successfully posted!")
 
-    def create_index(self):
+    def create_index(self) -> None:
         """
         Creates the defined index in ElasticSearch
         """
@@ -211,7 +172,7 @@ class TrumParser:
         elif res.status_code != 200:
             print("Elastic not found at", self.url)
 
-    def delete_index(self):
+    def delete_index(self) -> None:
         """
         Deletes the created index from ElasticSearch
         """
@@ -226,7 +187,8 @@ class TrumParser:
         elif res.status_code != 200:
             print("Elastic not found at", self.url)
 
-def maybe_download_files(directory_downloaded_data, force_update_2017=False):
+
+def maybe_download_files(directory_downloaded_data: str, force_update_2017=False) -> None:
     """
     Potentially downloads the missing files using The Trump Archive by github@bpb27
     :param directory_downloaded_data: Path to store the downloaded files
@@ -273,6 +235,7 @@ def get_users_mentioned(json_tweet) -> list:
     """
     return [user_mentioned.get("screen_name") for user_mentioned in json_tweet.get("entities").get("user_mentions")]
 
+
 def get_hashtags_mentioned(json_tweet) -> list:
     """
     Returns hashtags mentioned in the given tweet
@@ -280,3 +243,49 @@ def get_hashtags_mentioned(json_tweet) -> list:
     :return: List with all the hashtags as strings
     """
     return [hashtags.get("text") for hashtags in json_tweet.get("entities").get("hashtags")]
+
+
+def process_language(text: str) -> dict:
+    """
+    Processes the input text and obtains mentioned persons, organizations and locations
+    :param text: Tweet text as a string
+    :return:
+    """
+    try:
+        tagged = nltk.pos_tag(nltk.word_tokenize(text.replace("@", "")))
+        ne_tagged = nltk.ne_chunk(tagged)
+        words = []
+        adjectives = []
+        for t in tagged:
+            if (t[1] == 'NN') or (t[1] == 'NNS') or (t[1] == 'NNP') or (t[1] == 'NNPS'):
+                words.append(t[0])
+            if (t[1] == 'JJ') or (t[1] == 'JJS') or (t[1] == 'JJP'):
+                adjectives.append(t[0])
+        words.append(adjectives)
+
+        named_entities = {'words': words, 'NLTK_PERSON': [], 'NLTK_ORGANIZATION': [], 'NLTK_LOCATION': []}
+
+        for entity in ne_tagged:
+            if isinstance(entity, nltk.tree.Tree):
+                etext = " ".join([word for word, tag in entity.leaves()])
+                label = entity.label()
+            else:
+                continue
+
+            if label == 'PERSON':
+                key = 'NLTK_PERSON'
+            elif label == 'ORGANIZATION':
+                key = 'NLTK_ORGANIZATION'
+            elif label == 'LOCATION':
+                key = 'NLTK_LOCATION'
+            else:
+                key = None
+
+            if key:
+                named_entities[key].append(etext)
+
+        return named_entities
+
+    except NameError as e:
+        print(str(e))
+    return None

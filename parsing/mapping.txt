@@ -12,28 +12,28 @@
         "words":{
           "type": "text"
         },
-	"NLTK_PERSON":{
+	    "NLTK_PERSON":{
           "type": "keyword"
         },
-	"NLTK_LOCATION":{
+	    "NLTK_LOCATION":{
           "type": "keyword"
         },
-	"NLTK_ORGANIZATION":{
+	    "NLTK_ORGANIZATION":{
           "type": "keyword"
         },
-	"NER_PERSON":{
+	    "NER_PERSON":{
           "type": "keyword"
         },
-	"NER_LOCATION":{
+	    "NER_LOCATION":{
           "type": "keyword"
         },
-	"locations":{
+	    "NER_ORGANIZATION":{
           "type": "keyword"
         },
         "users_mentioned":{
           "type": "keyword"
         },
-        "hashtags":{
+        "hashtags_mentioned":{
           "type": "keyword"
         },
         "retweet_count":{
@@ -42,13 +42,10 @@
         "favorite_count":{
           "type": "integer"
         },
-        "user_followers":{
-          "type": "integer"
-        },
         "sentiment":{
           "type":"double"
         },
-        "location": {
+        "geo_location": {
           "type": "geo_point"
         }
       }
