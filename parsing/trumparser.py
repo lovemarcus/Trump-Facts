@@ -303,7 +303,10 @@ def update_location_dictionary(file_path):
 
 # parse locations from file and get corresponding gps coordinates if available
 def parse_locations(file_path):
-    locations = {}
+    with open('locDict.txt', 'r') as myfile:
+        locations = json.load(myfile)
+    for loc,geo in locations.items():
+        print loc
     with open(file_path, 'r') as myfile:
         data=myfile.readlines()
         for tweet in data:
@@ -321,7 +324,7 @@ def get_gps_coordinates(loc):
         return ( str( geo_elem.latitude ) + ',' + str( geo_elem.longitude ) )
     except AttributeError as ae:
         print("Failed Conversion: " + loc)
-        return None
+        return []
 
 def geocode(city, recursion=0):
     try:
