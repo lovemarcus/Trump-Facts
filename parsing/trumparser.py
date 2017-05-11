@@ -11,6 +11,7 @@ import ast
 import time
 from elasticsearch import Elasticsearch
 from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut
 from nltk.tag import StanfordNERTagger
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from itertools import groupby
@@ -299,40 +300,61 @@ def update_location_dictionary(file_path):
     with open('locDict.txt', 'w') as outfile:
         json.dump(locations, outfile)
     f = get_fail_percentage('locDict.txt')
-    print("> Finished updating locations, %.2f success rate" % f)
+    print("> Finished updating %d locations, %.2f success rate" %( len(locations),f))
 
 # parse locations from file and get corresponding gps coordinates if available
 def parse_locations(file_path):
+    new_location_nb = 0
+    tweets = 0
     with open('locDict.txt', 'r') as myfile:
-        locations = json.load(myfile)
+        try:
+            locations = json.load(myfile)
+        except:
+            locations = {}
     with open(file_path, 'r') as myfile:
         data=myfile.readlines()
         for tweet in data:
+            tweets +=1
+            if(tweets%1000==0):
+                print("%d tweets proccessed" % tweets)
+            if(new_location_nb > 100):
+                new_location_nb = 0
+                print("saving 100 loc")
+                with open('locDict.txt', 'w') as outfile:
+                    json.dump(locations, outfile)
+                    
             for tag, chunk in groupby(ast.literal_eval(tweet), lambda x:x[1]):
                 if tag=="LOCATION":
                     word = " ".join(w for w, t in chunk)
                     if (locations.get(word)==None):
-                        locations[word] = get_gps_coordinates(word)
+                        locations[word] = get_gps_coordinates(word,locations)
+                        new_location_nb+=1
     return locations
 
 # Get corresponding gps coordinates to string loc
-def get_gps_coordinates(loc):
+def get_gps_coordinates(loc, locations):
+    time.sleep(0.5)
     try:
-        geo_elem = geocode(loc)
+        geo_elem = geocode(loc,locations)
         return ( str( geo_elem.latitude ) + ',' + str( geo_elem.longitude ) )
     except AttributeError as ae:
-        print("Failed Conversion: " + loc)
+        #print("Failed Conversion: " + loc)
         return []
 
-def geocode(city, recursion=0):
+def geocode(city,locations, recursion=0):
+    print(city)
     try:
         return Nominatim().geocode(city)
-    except AttributeError as e:
-        if recursion > 10:      # max recursions
+    except GeocoderTimedOut as e:
+        if recursion > 2:      # max recursions
+            with open('locDict.txt', 'w') as outfile:
+                json.dump(locations, outfile)
+            f = get_fail_percentage('locDict.txt')
+            print("> Timed out updating %d locations, %.2f success rate" %( len(locations),f))
             raise e
-        time.sleep(1) # wait a bit
+        time.sleep(2) # wait a bit
         # try again
-        return geocode(city, recursion=recursion + 1)
+        return geocode(city,locations, recursion=recursion + 1)
 
 def get_fail_percentage(file_path):
     fails = 0
