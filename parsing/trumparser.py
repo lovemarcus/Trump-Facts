@@ -305,8 +305,6 @@ def update_location_dictionary(file_path):
 def parse_locations(file_path):
     with open('locDict.txt', 'r') as myfile:
         locations = json.load(myfile)
-    for loc,geo in locations.items():
-        print loc
     with open(file_path, 'r') as myfile:
         data=myfile.readlines()
         for tweet in data:
@@ -341,6 +339,6 @@ def get_fail_percentage(file_path):
     with open(file_path) as outfile:
         locations = json.load(outfile)
     for key,value in locations.items():
-        if value == None:
+        if value == []:
             fails += 1
     return(1-float(fails)/len(locations))
