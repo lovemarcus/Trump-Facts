@@ -21,19 +21,21 @@ class TrumParser:
     def __init__(self, index = "twitter", url ='http://localhost:9200'):
         self.analyzer = SentimentIntensityAnalyzer()
         #self.st = StanfordNERTagger('english.all.3class.distsim.crf.ser.gz')
+        self.NER_dict = self.init_NER();
         self.geolocator = Nominatim()
         self.index = index
         self.url = url
         self.months_dict = {
                             'Jan': u'01', 'Feb': u'02', 'Mar': u'03', 'Apr': u'04', 'May': u'05',
-                            'Jun': u'06', 'Jul': u'07', 'Aug': u'08', 'Sep': u'09', 'Oct': u'10', 
+                            'Jun': u'06', 'Jul': u'07', 'Aug': u'08', 'Sep': u'09', 'Oct': u'10',
                             'Nov': u'11', 'Dec': u'12'
                             }
         with open('mapping.txt', 'r') as myfile:
             self.mapping = myfile.read().replace('\n', '')
         with open('locDict.txt', 'r') as myfile:
             self.locDict = json.load(myfile)
-    def extract_relevant_fields_tweet(self, json_tweet):
+
+    def extract_relevant_fields_tweet(self, json_tweet, idx):
         """
         Extracts relevant information out from a given tweet
         :param json_tweet: Tweet in JSON format
@@ -63,8 +65,9 @@ class TrumParser:
         # Get sentiment impact from the tweet
         tweet["sentiment"] = self.get_sentiment(tweet["text"])
 
-        """"# Get persons, locations and organizations using NER by Stanford, Note: very slow segment...
-        netagged_words = self.named_entity_recognition(tweet["text"])
+        # Get persons, locations and organizations using NER by Stanford, Note: very slow segment...
+        #netagged_words = self.named_entity_recognition(tweet["text"])
+        netagged_words = self.NER_dict[idx]
         tweet["NER_PERSON"] = []
         tweet["NER_LOCATION"] = []
         tweet["NER_ORGANIZATION"] = []
@@ -76,12 +79,11 @@ class TrumParser:
                 loc = " ".join(w for w, t in chunk)
                 tweet["NER_LOCATION"].append(loc)
                 try:
-                    geo_elem = self.geolocator.geocode(loc)
-                    tweet["geo_location"].append(str(geo_elem.latitude) + ',' + str(geo_elem.longitude))
-                except AttributeError:
-                    print("Failed Conversion: " + loc)
+                    tweet["geo_location"] = self.locDict[loc]
+                except KeyError as ke:
+                    print("Missing Coordinates for: " + str(ke))
             elif tag == "ORGANIZATION":
-                tweet["NER_ORGANIZATION"].append(" ".join(w for w, t in chunk))"""
+                tweet["NER_ORGANIZATION"].append(" ".join(w for w, t in chunk))
 
         return tweet
 
@@ -148,7 +150,7 @@ class TrumParser:
                     for raw_tweet in raw_tweets:
                         # Extract the relevant features from each tweet in json_tweets
                         #  t1 = time.time()
-                        parsed_tweet = self.extract_relevant_fields_tweet(raw_tweet)
+                        parsed_tweet = self.extract_relevant_fields_tweet(raw_tweet, idx)
                         #  t_parsing += time.time()-t1
 
                         # Post to ElasticSearch
@@ -192,6 +194,26 @@ class TrumParser:
         elif res.status_code != 200:
             print("Elastic not found at", self.url)
 
+    def init_NER(self):
+        fname = 'outfile.txt'
+        idx = 0;
+        Ner_lists = {}
+        with open(fname, 'r') as f:
+            for line in f:
+                Ner_lists[idx] = self.parse_to_list(line)
+                idx = idx + 1
+        return Ner_lists
+
+    def parse_to_list(self, s):
+        tuples = s.split('), ')
+        out = []
+        for x in tuples:
+            a, b = x.split(', ')
+            a = a.strip("'").strip("(''").strip("[('")
+            b = b.strip("'").strip("')]\n")
+            out.append((str(a),str(b)))
+        return out
+
 
 def maybe_download_files(directory_downloaded_data, force_update_2017=False):
     """
@@ -230,7 +252,7 @@ def maybe_download_files(directory_downloaded_data, force_update_2017=False):
         print("")
     else:
         print("Nothing to download")
-    
+
 def get_users_mentioned(json_tweet):
     """
     Returns users mentioned in the given tweet
@@ -239,7 +261,6 @@ def get_users_mentioned(json_tweet):
     """
     return [user_mentioned.get("screen_name") for user_mentioned in json_tweet.get("entities").get("user_mentions")]
 
-
 def get_hashtags_mentioned(json_tweet):
     """
     Returns hashtags mentioned in the given tweet
@@ -247,7 +268,6 @@ def get_hashtags_mentioned(json_tweet):
     :return: List with all the hashtags as strings
     """
     return [hashtags.get("text") for hashtags in json_tweet.get("entities").get("hashtags")]
-
 
 def process_language(text):
     """
@@ -322,7 +342,7 @@ def parse_locations(file_path):
                 print("saving 100 loc")
                 with open('locDict.txt', 'w') as outfile:
                     json.dump(locations, outfile)
-                    
+
             for tag, chunk in groupby(ast.literal_eval(tweet), lambda x:x[1]):
                 if tag=="LOCATION":
                     word = " ".join(w for w, t in chunk)
@@ -335,13 +355,13 @@ def parse_locations(file_path):
 def get_gps_coordinates(loc, locations):
     time.sleep(0.5)
     try:
-        geo_elem = geocode(loc,locations)
+        geo_elem = geocode(loc, locations)
         return ( str( geo_elem.latitude ) + ',' + str( geo_elem.longitude ) )
     except AttributeError as ae:
         #print("Failed Conversion: " + loc)
         return []
 
-def geocode(city,locations, recursion=0):
+def geocode(city, locations, recursion=0):
     print(city)
     try:
         return Nominatim().geocode(city)
