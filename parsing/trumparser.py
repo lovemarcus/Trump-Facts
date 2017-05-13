@@ -50,7 +50,10 @@ class TrumParser:
         ne = process_language(tweet["text"])
         for key, value in ne.items():
             tweet[key] = value
-
+        # Get persons, locations and organizations using NER by Stanford, Note: very slow segment...
+        tweet["NER_PERSON"], tweet["NER_LOCATION"], tweet["NER_ORGANIZATION"], tweet["geo_location"] = \
+            self.get_persons_locations_organizations_geolocations(idx)
+        
         # Get date and hour
         tweet["date"], tweet["hour"] = self.get_date_and_hour(json_tweet)
 
@@ -65,27 +68,32 @@ class TrumParser:
         # Get sentiment impact from the tweet
         tweet["sentiment"] = self.get_sentiment(tweet["text"])
 
-        # Get persons, locations and organizations using NER by Stanford, Note: very slow segment...
-        #netagged_words = self.named_entity_recognition(tweet["text"])
+        return tweet
+
+    def get_persons_locations_organizations_geolocations(self, idx):
+        """
+        Gets persons, locations (+geo_locations) and organization mentioned in the tweet
+        :param idx: ID for a tweet
+        :return: Four arrays containing persons, locations and organizations names + geolocation of the mentioned location
+        """
         netagged_words = self.NER_dict[idx]
-        tweet["NER_PERSON"] = []
-        tweet["NER_LOCATION"] = []
-        tweet["NER_ORGANIZATION"] = []
-        tweet["geo_location"] = []
+        person = []
+        location = []
+        organization = []
+        geo_location = []
         for tag, chunk in groupby(netagged_words, lambda x: x[1]):
             if tag == "PERSON":
-                tweet["NER_PERSON"].append(" ".join(w for w, t in chunk))
+                person.append(" ".join(w for w, t in chunk))
             elif tag == "LOCATION":
                 loc = " ".join(w for w, t in chunk)
-                tweet["NER_LOCATION"].append(loc)
+                location.append(loc)
                 try:
-                    tweet["geo_location"] = self.locDict[loc]
+                    geo_location = self.locDict[loc]
                 except KeyError as ke:
                     print("Missing Coordinates for: " + str(ke))
             elif tag == "ORGANIZATION":
-                tweet["NER_ORGANIZATION"].append(" ".join(w for w, t in chunk))
-
-        return tweet
+                organization.append(" ".join(w for w, t in chunk))
+        return person, location, organization, geo_location
 
     def get_date_and_hour(self, json_tweet):
         """
@@ -134,7 +142,6 @@ class TrumParser:
                 if not filename.endswith(".json"):
                     continue
                 path_to_file = os.path.join(directory_downloaded_data, filename)
-                print("> Posting")
                 # t0 = time.time()
 
                 # Test on small portion of the data
@@ -146,7 +153,7 @@ class TrumParser:
                     raw_tweets = json.load(raw_tweets)
                     # t_parsing = 0
                     # t_index = 0
-                    print(len(raw_tweets), "tweets from", path_to_file)  # , end="... ")
+                    print("> Posting", len(raw_tweets), "tweets from", path_to_file)  # , end="... ")
                     for raw_tweet in raw_tweets:
                         # Extract the relevant features from each tweet in json_tweets
                         #  t1 = time.time()
