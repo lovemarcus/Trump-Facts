@@ -5,7 +5,9 @@ from optparse import OptionParser
 # Create a parser to add options
 parser = OptionParser()
 usage = "usage: %prog [options] "
-parser.add_option("-u","--update", action="store_true", default=False, dest="update_locations",help="update the geo coordinates (can take some time)")
+parser.add_option("-u", "--update", action="store_true", default=False,
+                  help="update the geo coordinates (can take some time)",
+                  dest="update_locations")
 options, arguments = parser.parse_args()
 
 # Update locations
@@ -16,7 +18,7 @@ Trump = TrumParser()
 # Trump.delete_index()
 Trump.create_index()
 # Store download files in /data. We force the script to retrieve last tweets from this year!
-maybe_download_files(directory_downloaded_data='data', force_update_2017=True)
-    
+maybe_download_files(directory_downloaded_data='data', force_update_2017=False)
+
 # Change the parameter n_twitts to post a lower amount of tweets
 Trump.post_to_elastic(directory_downloaded_data='data', n_twitts=1e5)

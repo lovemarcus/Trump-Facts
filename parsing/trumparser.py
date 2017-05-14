@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-#from itertools import groupby
-
 import io
 import nltk
 import requests
@@ -12,24 +10,22 @@ import time
 from elasticsearch import Elasticsearch
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
-from nltk.tag import StanfordNERTagger
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from itertools import groupby
 
 
 class TrumParser:
-    def __init__(self, index = "twitter", url ='http://localhost:9200'):
+    def __init__(self, index="twitter", url='http://localhost:9200'):
         self.analyzer = SentimentIntensityAnalyzer()
-        #self.st = StanfordNERTagger('english.all.3class.distsim.crf.ser.gz')
-        self.NER_dict = self.init_NER();
+        self.NER_dict = init_ner()
         self.geolocator = Nominatim()
         self.index = index
         self.url = url
         self.months_dict = {
-                            'Jan': u'01', 'Feb': u'02', 'Mar': u'03', 'Apr': u'04', 'May': u'05',
-                            'Jun': u'06', 'Jul': u'07', 'Aug': u'08', 'Sep': u'09', 'Oct': u'10',
-                            'Nov': u'11', 'Dec': u'12'
-                            }
+            'Jan': u'01', 'Feb': u'02', 'Mar': u'03', 'Apr': u'04', 'May': u'05',
+            'Jun': u'06', 'Jul': u'07', 'Aug': u'08', 'Sep': u'09', 'Oct': u'10',
+            'Nov': u'11', 'Dec': u'12'
+        }
         with open('mapping.txt', 'r') as myfile:
             self.mapping = myfile.read().replace('\n', '')
         with open('locDict.txt', 'r') as myfile:
@@ -39,6 +35,7 @@ class TrumParser:
         """
         Extracts relevant information out from a given tweet
         :param json_tweet: Tweet in JSON format
+        :param idx: Tweet ID
         :return: Dictionary containing the relevant fields extracted from the tweet
         """
         tweet = dict()
@@ -53,7 +50,7 @@ class TrumParser:
         # Get persons, locations and organizations using NER by Stanford, Note: very slow segment...
         tweet["NER_PERSON"], tweet["NER_LOCATION"], tweet["NER_ORGANIZATION"], tweet["geo_location"] = \
             self.get_persons_locations_organizations_geolocations(idx)
-        
+
         # Get date and hour
         tweet["date"], tweet["hour"] = self.get_date_and_hour(json_tweet)
 
@@ -104,7 +101,7 @@ class TrumParser:
         d = json_tweet.get("created_at").split(" ")
         date = d[5] + u"/" + self.months_dict[d[1]] + u'/' + d[2] + u' ' + d[3]
         # Tweet hour
-        utc_offset = json_tweet.get("user").get("utc_offset")/3600
+        utc_offset = json_tweet.get("user").get("utc_offset") / 3600
         h = str(d[3])
         hour = int(h[0:2]) + int(utc_offset)
         if hour < 0:
@@ -118,15 +115,6 @@ class TrumParser:
         :return: Float containing the sentiment of the input tweet string
         """
         return self.analyzer.polarity_scores(text).get("compound")
-
-    def named_entity_recognition(self, text):
-        """
-        Obtain persons, locations and organizations mentioned in the given tweet using Named-Entity Recognition (NER)
-        tool by Stanford
-        :param text: Tweet text as a string
-        :return: List containing
-        """
-        return self.st.tag(text.split())
 
     def post_to_elastic(self, directory_downloaded_data, n_twitts=5e10):
         """
@@ -201,25 +189,36 @@ class TrumParser:
         elif res.status_code != 200:
             print("Elastic not found at", self.url)
 
-    def init_NER(self):
-        fname = 'outfile.txt'
-        idx = 0;
-        Ner_lists = {}
-        with open(fname, 'r') as f:
-            for line in f:
-                Ner_lists[idx] = self.parse_to_list(line)
-                idx = idx + 1
-        return Ner_lists
 
-    def parse_to_list(self, s):
-        tuples = s.split('), ')
-        out = []
-        for x in tuples:
-            a, b = x.split(', ')
-            a = a.strip("'").strip("(''").strip("[('")
-            b = b.strip("'").strip("')]\n")
-            out.append((str(a),str(b)))
-        return out
+def init_ner():
+    """
+    Loads the dictionary containing name organizations to geo_location conversion
+    :return: Dictionary organization to geo_locatin conversion
+    """
+    fname = 'outfile.txt'
+    idx = 0
+    ner_lists = {}
+    with open(fname, 'r') as f:
+        for line in f:
+            ner_lists[idx] = parse_to_list(line)
+            idx += 1
+    return ner_lists
+
+
+def parse_to_list(s):
+    """
+    Converts a string(format: a, b, c) into a list (format [a, b, c])
+    :param s: String (format: a, b, c)
+    :return: List of values contained in string s
+    """
+    tuples = s.split('), ')
+    out = []
+    for x in tuples:
+        a, b = x.split(', ')
+        a = a.strip("'").strip("(''").strip("[('")
+        b = b.strip("'").strip("')]\n")
+        out.append((str(a), str(b)))
+    return out
 
 
 def maybe_download_files(directory_downloaded_data, force_update_2017=False):
@@ -260,6 +259,7 @@ def maybe_download_files(directory_downloaded_data, force_update_2017=False):
     else:
         print("Nothing to download")
 
+
 def get_users_mentioned(json_tweet):
     """
     Returns users mentioned in the given tweet
@@ -268,6 +268,7 @@ def get_users_mentioned(json_tweet):
     """
     return [user_mentioned.get("screen_name") for user_mentioned in json_tweet.get("entities").get("user_mentions")]
 
+
 def get_hashtags_mentioned(json_tweet):
     """
     Returns hashtags mentioned in the given tweet
@@ -275,6 +276,7 @@ def get_hashtags_mentioned(json_tweet):
     :return: List with all the hashtags as strings
     """
     return [hashtags.get("text") for hashtags in json_tweet.get("entities").get("hashtags")]
+
 
 def process_language(text):
     """
@@ -321,16 +323,27 @@ def process_language(text):
         print(str(e))
     return None
 
+
 def update_location_dictionary(file_path):
+    """
+    Used to update locations in the dictionary and generate a corresponding file named "locDict.txt"
+    :param file_path: Path containing the NER obtained names
+    """
     print("> Updating locations mentioned and geo coordinates ...")
     locations = parse_locations(file_path)
     with open('locDict.txt', 'w') as outfile:
         json.dump(locations, outfile)
     f = get_fail_percentage('locDict.txt')
-    print("> Finished updating %d locations, %.2f success rate" %( len(locations),f))
+    print("> Finished updating %d locations, %.2f success rate" % (len(locations), f))
 
-# parse locations from file and get corresponding gps coordinates if available
+
+#
 def parse_locations(file_path):
+    """
+    Parses locations from file and get corresponding gps coordinates if available
+    :param file_path: Path containing the NER obtained names
+    :return:
+    """
     new_location_nb = 0
     tweets = 0
     with open('locDict.txt', 'r') as myfile:
@@ -339,55 +352,75 @@ def parse_locations(file_path):
         except:
             locations = {}
     with open(file_path, 'r') as myfile:
-        data=myfile.readlines()
+        data = myfile.readlines()
         for tweet in data:
-            tweets +=1
-            if(tweets%1000==0):
-                print("%d tweets proccessed" % tweets)
-            if(new_location_nb > 100):
+            tweets += 1
+            if tweets % 1000 == 0:
+                print("%d tweets processed" % tweets)
+            if new_location_nb > 100:
                 new_location_nb = 0
                 print("saving 100 loc")
                 with open('locDict.txt', 'w') as outfile:
                     json.dump(locations, outfile)
 
-            for tag, chunk in groupby(ast.literal_eval(tweet), lambda x:x[1]):
-                if tag=="LOCATION":
+            for tag, chunk in groupby(ast.literal_eval(tweet), lambda x: x[1]):
+                if tag == "LOCATION":
                     word = " ".join(w for w, t in chunk)
-                    if (locations.get(word)==None):
-                        locations[word] = get_gps_coordinates(word,locations)
-                        new_location_nb+=1
+                    if locations.get(word) is None:
+                        locations[word] = get_gps_coordinates(word, locations)
+                        new_location_nb += 1
     return locations
 
-# Get corresponding gps coordinates to string loc
+
 def get_gps_coordinates(loc, locations):
+    """
+    Get corresponding gps coordinates to string loc
+    :param loc: Location name we wish to extract the geo coordinates from
+    :param locations:
+    :return:
+    """
     time.sleep(0.5)
     try:
         geo_elem = geocode(loc, locations)
-        return ( str( geo_elem.latitude ) + ',' + str( geo_elem.longitude ) )
-    except AttributeError as ae:
-        #print("Failed Conversion: " + loc)
+        return str(geo_elem.latitude) + ',' + str(geo_elem.longitude)
+    except AttributeError:
+        # print("Failed Conversion: " + loc)
         return []
 
+
 def geocode(city, locations, recursion=0):
+    """
+    Obtaines the geo coordinates of a location
+    :param city:
+    :param locations:
+    :param recursion:
+    :return:
+    """
     print(city)
     try:
         return Nominatim().geocode(city)
     except GeocoderTimedOut as e:
-        if recursion > 2:      # max recursions
+        if recursion > 2:  # max recursions
             with open('locDict.txt', 'w') as outfile:
                 json.dump(locations, outfile)
             f = get_fail_percentage('locDict.txt')
-            print("> Timed out updating %d locations, %.2f success rate" %( len(locations),f))
+            print("> Timed out updating %d locations, %.2f success rate" % (len(locations), f))
             raise e
-        time.sleep(2) # wait a bit
+        time.sleep(2)  # wait a bit
         # try again
-        return geocode(city,locations, recursion=recursion + 1)
+        return geocode(city, locations, recursion=recursion + 1)
+
 
 def get_fail_percentage(file_path):
+    """
+    TODO
+    :param file_path:
+    :return:
+    """
     fails = 0
     with open(file_path) as outfile:
         locations = json.load(outfile)
-    for key,value in locations.items():
-        if value == []:
+    for key, value in locations.items():
+        if value:
             fails += 1
-    return(1-float(fails)/len(locations))
+    return 1 - float(fails) / len(locations)

@@ -2,31 +2,18 @@
 
 
 ---
->	:calendar:
-	Meeting: Wednesday 10th May, 13:00 PM at the [KTH Bib](https://www.google.se/maps/place/KTH+Biblioteket/@59.34789,18.072871,15z/data=!4m2!3m1!1s0x0:0x80f2dd1472d9a0fa?sa=X&ved=0ahUKEwiIs-nCv83TAhWkHpoKHderCygQ_BIIdjAN)
-
->	:calendar:
-	Meeting: Friday 12th May, 9:00 AM at the [KTH Bib](https://www.google.se/maps/place/KTH+Biblioteket/@59.34789,18.072871,15z/data=!4m2!3m1!1s0x0:0x80f2dd1472d9a0fa?sa=X&ved=0ahUKEwiIs-nCv83TAhWkHpoKHderCygQ_BIIdjAN)
 
 #### Current State of the project
 
 So far we are preparing the
 - [X] Tweets parsed and posted to **ElasticSearch**
-- [X] Sentiment Analysis of tweets
-- [ ] Visualization of the tweets using **Kibana**
+- [X] All fields required implemented (NER, sentiment, date, etc.)
+- [ ] Create a Dashboard
 	- [ ] **Sentiment Analysis**
-		* Filter tweets in two categories: Positive (>0.5) and Negative (<-0.5) and obtain the two corresponding wordclouds.
-		* Remove stop words. 
-		* Graphical representation of the percentile of positive tweets retrieved for a given word.
 	- [ ] **Locations/People Heatmap/Wordcloud**
-		* Use [NER](https://nlp.stanford.edu/software/CRF-NER.shtml) or a similar tool to extract places/organizations/people mentioned by Trump's tweets. Plot a corresponding Wordcloud.
-		* Obtain geo-localization of the places/organizations and plot them in a Heatmap.
 	- [ ] **Hourly Tweet Histogram**
-		* Find a way to plot just depending on the hour of the day.
-		* Plot corresponding histogram.
 - [ ] **Report** using Overleaf, find link [here](https://www.overleaf.com/9353622vmdbczthhksc#/33786110/)
-	* Introduction and abstract sections has been started. Feel free to modify them.
-- [ ] **Poster**
+- [ ] **Poster** using Overleaf, find link [here](https://www.overleaf.com/9556125sqkfjwkdzzpz)
 
 ---
 
@@ -58,7 +45,7 @@ Not all the data provided by the Twitter API is relevant to us. Furthermore, we 
 Simply run the bash script
 
 ```
-bash install_dependencies
+$ bash install_dependencies
 ```
 
 
