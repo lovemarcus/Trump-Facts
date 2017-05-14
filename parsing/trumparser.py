@@ -12,7 +12,8 @@ from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from itertools import groupby
-
+from datetime import datetime, timedelta
+import pytz
 
 class TrumParser:
     def __init__(self, index="twitter", url='http://localhost:9200'):
@@ -98,14 +99,11 @@ class TrumParser:
         :param json_tweet: Tweet in JSON format
         :return: One string containing the date and one integer containing the hour
         """
-        d = json_tweet.get("created_at").split(" ")
-        date = d[5] + u"/" + self.months_dict[d[1]] + u'/' + d[2] + u' ' + d[3]
-        # Tweet hour
+        d_string = json_tweet.get("created_at")
+        d = datetime.strptime(d_string, '%a %b %d %H:%M:%S +0000 %Y').replace(tzinfo=pytz.UTC)
         utc_offset = json_tweet.get("user").get("utc_offset") / 3600
-        h = str(d[3])
-        hour = int(h[0:2]) + int(utc_offset)
-        if hour < 0:
-            hour += 24
+        date = d + timedelta(hours=utc_offset-1)
+        hour = (date.hour)# + 1) % 24
         return date, hour
 
     def get_sentiment(self, text):
