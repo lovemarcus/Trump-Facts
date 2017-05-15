@@ -103,7 +103,7 @@ class TrumParser:
         d = datetime.strptime(d_string, '%a %b %d %H:%M:%S +0000 %Y').replace(tzinfo=pytz.UTC)
         utc_offset = json_tweet.get("user").get("utc_offset") / 3600
         date = d + timedelta(hours=utc_offset-1)
-        hour = (date.hour)# + 1) % 24
+        hour = date.hour
         return date, hour
 
     def get_sentiment(self, text):

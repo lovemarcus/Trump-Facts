@@ -22,3 +22,8 @@ maybe_download_files(directory_downloaded_data='data', force_update_2017=False)
 
 # Change the parameter n_twitts to post a lower amount of tweets
 Trump.post_to_elastic(directory_downloaded_data='data', n_twitts=1e5)
+
+""""date":{
+          "type":"date",
+          "format":"yyyy/MM/dd HH:mm:ss"
+        }"""
