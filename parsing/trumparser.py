@@ -31,6 +31,10 @@ class TrumParser:
             self.mapping = myfile.read().replace('\n', '')
         with open('locDict.txt', 'r') as myfile:
             self.locDict = json.load(myfile)
+        self.words = {}
+        self.newwords = {}
+        self.removedwords = {}
+        self.filtered_ner = {}
 
     def extract_relevant_fields_tweet(self, json_tweet, idx):
         """
@@ -45,11 +49,12 @@ class TrumParser:
         tweet["text"] = json_tweet.get("text")
 
         # Get persons, locations and organizations using NLTK
-        ne = process_language(tweet["text"])
+        ne = self.process_language(tweet["text"].encode("ascii","ignore"))
         for key, value in ne.items():
             tweet[key] = value
+            
         # Get persons, locations and organizations using NER by Stanford, Note: very slow segment...
-        tweet["NER_PERSON"], tweet["NER_LOCATION"], tweet["NER_ORGANIZATION"], tweet["geo_location"] = \
+        tweet["NER_PERSON"], tweet["NER_LOCATION"], tweet["NER_ORGANIZATION"], tweet["geo_location"], tweet["NER_PERSON_FILTERED"], tweet["NER_LOCATION_FILTERED"], tweet["NER_ORGANIZATION_FILTERED"] = \
             self.get_persons_locations_organizations_geolocations(idx)
 
         # Get date and hour
@@ -78,20 +83,58 @@ class TrumParser:
         person = []
         location = []
         organization = []
+        person_filtered = []
+        location_filtered = []
+        organization_filtered = []
+
         geo_location = []
         for tag, chunk in groupby(netagged_words, lambda x: x[1]):
             if tag == "PERSON":
-                person.append(" ".join(w for w, t in chunk))
+                temp = " ".join(w for w, t in chunk)
+                person.append(temp)
+                w_filtered = self.check_if_in_dict("filtered_ner",temp)
+                person_filtered.append(w_filtered)
             elif tag == "LOCATION":
                 loc = " ".join(w for w, t in chunk)
                 location.append(loc)
+                w_filtered = self.check_if_in_dict("filtered_ner",loc)
+                person_filtered.append(w_filtered)
                 try:
                     geo_location = self.locDict[loc]
                 except KeyError as ke:
                     print("Missing Coordinates for: " + str(ke))
             elif tag == "ORGANIZATION":
-                organization.append(" ".join(w for w, t in chunk))
-        return person, location, organization, geo_location
+                temp = " ".join(w for w, t in chunk)
+                organization.append(temp)
+                w_filtered = self.check_if_in_dict("filtered_ner",temp)
+                organization_filtered.append(w_filtered)
+                
+        return person, location, organization, geo_location, person_filtered, location_filtered, organization_filtered
+
+    def check_if_in_dict(self,dict,w):
+        d = {}
+        if(not getattr(self, dict).get(w,False)):
+            if not w.isupper():
+                w = w.lower()
+            if (len(w)>5) and (w[-1]!="e") and (w[-1]!="y") and (w[-1]!="g"):
+                if not  getattr(self, dict).get(w[:-1],False):
+                    if not  getattr(self, dict).get(w[:-2],False):
+                        d = getattr(self, dict)
+                        d[w] = True
+                        setattr(self, dict,d)
+                        return w
+                    else:
+                        return w[:-2]
+                else:
+                    return w[:-1]
+            else:
+                d = getattr(self, dict)
+                d[w] = True
+                setattr(self, dict,d)
+                return w
+        else:
+            return w
+        
 
     def get_date_and_hour(self, json_tweet):
         """
@@ -113,6 +156,72 @@ class TrumParser:
         :return: Float containing the sentiment of the input tweet string
         """
         return self.analyzer.polarity_scores(text).get("compound")
+
+    def process_language(self,text):
+        """
+        Processes the input text and obtains mentioned persons, organizations and locations
+        :param text: Tweet text as a string
+        :return:
+        """
+        try:
+            tagged = nltk.pos_tag(nltk.word_tokenize(text.replace("@", "")))
+            ne_tagged = nltk.ne_chunk(tagged)
+            wordss = []
+            filtered_wordss = []
+            adjectives = []
+            for t in tagged:
+                if (t[1] == 'NN') or (t[1] == 'NNP') or (t[1] == 'NNPS'):
+                    wordss.append(t[0])
+                if (t[1] == 'NNS'):
+                    if t[0][-1]=="s":
+                        t = (t[0][-1],t[1])
+                    wordss.append(t[0])
+                if (t[1] == 'JJ') or (t[1] == 'JJS') or (t[1] == 'JJP'):
+                    adjectives.append(t[0])
+                    
+                w = t[0]
+                if(not self.words.get(w,False)):
+                    self.words[w] = True
+                
+                if(not self.newwords.get(w,False)):
+                    if not w.isupper():
+                        w = w.lower()
+                    if (len(w)>5) and (w[-1]!="e") and (w[-1]!="y") and (w[-1]!="g"):
+                        if(not self.newwords.get(w[:-1],False) and not self.newwords.get(w[:-2],False)):
+                            self.newwords[w] = True 
+                            filtered_wordss.append(w)
+                        else:
+                            self.removedwords[t[0]] = True
+                    else:
+                        self.newwords[w] = True
+            wordss = wordss+adjectives
+    
+            named_entities = {'words': wordss,'words_filtered': filtered_wordss , 'NLTK_PERSON': [], 'NLTK_ORGANIZATION': [], 'NLTK_LOCATION': []}
+    
+            for entity in ne_tagged:
+                if isinstance(entity, nltk.tree.Tree):
+                    etext = " ".join([word for word, tag in entity.leaves()])
+                    label = entity.label()
+                else:
+                    continue
+    
+                if label == 'PERSON':
+                    key = 'NLTK_PERSON'
+                elif label == 'ORGANIZATION':
+                    key = 'NLTK_ORGANIZATION'
+                elif label == 'LOCATION':
+                    key = 'NLTK_LOCATION'
+                else:
+                    key = None
+    
+                if key:
+                    named_entities[key].append(etext)
+    
+            return named_entities
+    
+        except NameError as e:
+            print(str(e))
+        return None
 
     def post_to_elastic(self, directory_downloaded_data, n_twitts=5e10):
         """
@@ -160,6 +269,8 @@ class TrumParser:
             print("Elastic not found at", self.url)
 
         print("\nTweets successfully posted!")
+        
+    
 
     def create_index(self):
         """
@@ -274,52 +385,6 @@ def get_hashtags_mentioned(json_tweet):
     :return: List with all the hashtags as strings
     """
     return [hashtags.get("text") for hashtags in json_tweet.get("entities").get("hashtags")]
-
-
-def process_language(text):
-    """
-    Processes the input text and obtains mentioned persons, organizations and locations
-    :param text: Tweet text as a string
-    :return:
-    """
-    try:
-        tagged = nltk.pos_tag(nltk.word_tokenize(text.replace("@", "")))
-        ne_tagged = nltk.ne_chunk(tagged)
-        words = []
-        adjectives = []
-        for t in tagged:
-            if (t[1] == 'NN') or (t[1] == 'NNS') or (t[1] == 'NNP') or (t[1] == 'NNPS'):
-                words.append(t[0])
-            if (t[1] == 'JJ') or (t[1] == 'JJS') or (t[1] == 'JJP'):
-                adjectives.append(t[0])
-        words.append(adjectives)
-
-        named_entities = {'words': words, 'NLTK_PERSON': [], 'NLTK_ORGANIZATION': [], 'NLTK_LOCATION': []}
-
-        for entity in ne_tagged:
-            if isinstance(entity, nltk.tree.Tree):
-                etext = " ".join([word for word, tag in entity.leaves()])
-                label = entity.label()
-            else:
-                continue
-
-            if label == 'PERSON':
-                key = 'NLTK_PERSON'
-            elif label == 'ORGANIZATION':
-                key = 'NLTK_ORGANIZATION'
-            elif label == 'LOCATION':
-                key = 'NLTK_LOCATION'
-            else:
-                key = None
-
-            if key:
-                named_entities[key].append(etext)
-
-        return named_entities
-
-    except NameError as e:
-        print(str(e))
-    return None
 
 
 def update_location_dictionary(file_path):

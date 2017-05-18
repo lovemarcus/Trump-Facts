@@ -8,13 +8,25 @@
         "words":{
           "type": "text"
         },
-	    "NLTK_PERSON":{
+	"words_FILTERED":{
+          "type": "text"
+        },
+	   "NLTK_PERSON":{
+          "type": "keyword"
+        },
+ 	  "NER_PERSON_FILTERED":{
           "type": "keyword"
         },
 	    "NLTK_LOCATION":{
           "type": "keyword"
         },
+	    "NER_LOCATION_FILTERED":{
+          "type": "keyword"
+        },
 	    "NLTK_ORGANIZATION":{
+          "type": "keyword"
+        },
+	    "NER_ORGANIZATION_FILTERED":{
           "type": "keyword"
         },
 	    "NER_PERSON":{
