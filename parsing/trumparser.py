@@ -98,7 +98,7 @@ class TrumParser:
                 loc = " ".join(w for w, t in chunk)
                 location.append(loc)
                 w_filtered = self.check_if_in_dict("filtered_ner",loc)
-                person_filtered.append(w_filtered)
+                location_filtered.append(w_filtered)
                 try:
                     geo_location = self.locDict[loc]
                 except KeyError as ke:
