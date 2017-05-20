@@ -66,7 +66,7 @@ This step might take one minute (or more).
 To run all this code, you can use the provided script [`jsonParser.py`](jsonParser.py). Simply run
 
 ```
-sh run.sh
+python3 jsonParser
 ```
 
 ### Add new features
