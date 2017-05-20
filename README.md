@@ -1,22 +1,6 @@
 # Trump-Facts
 
 
----
-
-#### Current State of the project
-
-So far we are preparing the
-- [X] Tweets parsed and posted to **ElasticSearch**
-- [X] All fields required implemented (NER, sentiment, date, etc.)
-- [ ] Create a Dashboard
-	- [ ] **Sentiment Analysis**
-	- [ ] **Locations/People Heatmap/Wordcloud**
-	- [ ] **Hourly Tweet Histogram**
-- [ ] **Report** using Overleaf, find link [here](https://www.overleaf.com/9353622vmdbczthhksc#/33786110/)
-- [ ] **Poster** using Overleaf, find link [here](https://www.overleaf.com/9556125sqkfjwkdzzpz)
-
----
-
 Visualization of Trump Tweets using Kibana and ElasticSearch.
 
 This project is currently being developed as part of the [DD2476 Search Engines and Information Retrieval Systems course](https://www.kth.se/student/kurser/kurs/DD2476?l=en) at [KTH Royal Institute of Technology](http://kth.se), spring 2017.
